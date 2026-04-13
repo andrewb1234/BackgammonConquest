@@ -105,11 +105,27 @@ export default function LoadoutView() {
         <p className="text-yellow-400 text-sm">Opponent is ready!</p>
       )}
 
-      {/* Sabotage info */}
-      {selected.includes("SABOTAGE") && (
-        <p className="text-xs text-gray-500">
-          Sabotage will be usable during battle to disable an enemy node modifier.
-        </p>
+      {/* Sabotage use during LOADOUT */}
+      {isReady && myPlayer?.loadout?.some((i) => i.itemId === "SABOTAGE" && !i.consumed) && (
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xs text-gray-400">
+            Use Sabotage now to disable an enemy node modifier for this match.
+          </p>
+          <div className="flex gap-2 flex-wrap justify-center">
+            {gameState?.campaign.nodes
+              .map((n, idx) => ({ ...n, idx }))
+              .filter((n) => n.owner !== null && n.owner !== myRole && n.owner !== "NEUTRAL")
+              .map((n) => (
+                <button
+                  key={n.idx}
+                  onClick={() => sendGameIntent("INTENT_USE_ITEM", { itemId: "SABOTAGE", targetId: n.idx })}
+                  className="px-3 py-1 bg-red-800 hover:bg-red-700 text-red-200 rounded text-xs transition"
+                >
+                  Sabotage Node {n.idx}
+                </button>
+              ))}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -145,7 +145,7 @@ export function handleIntentUseItem(
     return;
   }
 
-  if (gameState.battle.subPhase !== "ACTIVE") {
+  if (gameState.battle.subPhase !== "ACTIVE" && gameState.battle.subPhase !== "LOADOUT") {
     rejectIntent(socket, "INTENT_USE_ITEM", "INVALID_PHASE", gameState.stateVersion);
     return;
   }
@@ -252,8 +252,11 @@ export function handleIntentUseItem(
     case "SABOTAGE": {
       // Pre-Match: disable an enemy node's passive modifier
       // targetId = nodeId of the enemy node
-      // This should only be usable during LOADOUT sub-phase, but we allow it
-      // during ACTIVE for flexibility (it's a one-time use)
+      // Only usable during LOADOUT sub-phase
+      if (battle.subPhase !== "LOADOUT") {
+        rejectIntent(socket, "INTENT_USE_ITEM", "INVALID_PHASE", gameState.stateVersion);
+        return;
+      }
       if (targetId === undefined || typeof targetId !== "number") {
         rejectIntent(socket, "INTENT_USE_ITEM", "INVALID_TARGET", gameState.stateVersion);
         return;

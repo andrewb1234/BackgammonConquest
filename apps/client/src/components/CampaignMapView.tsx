@@ -10,6 +10,7 @@ export default function CampaignMapView() {
   const activePlayerId = gameState?.campaign.activePlayerId ?? "";
   const isActive = activePlayerId === clientId;
   const myRole = gameState?.players.find((p) => p.playerId === clientId)?.role as PlayerRole | undefined;
+  const myScrap = gameState?.players.find((p) => p.playerId === clientId)?.voidScrap ?? 0;
 
   const canTarget = (node: { owner: NodeOwner }) => {
     if (!isActive || !myRole) return false;
@@ -21,6 +22,9 @@ export default function CampaignMapView() {
       <h2 className="text-2xl font-bold text-amber-400">Campaign Map</h2>
       <p className="text-gray-400 text-sm">
         {isActive ? "Your turn — select a node to attack" : "Opponent's turn — waiting..."}
+      </p>
+      <p className="text-amber-300 text-xs">
+        Void-Scrap: {myScrap}
       </p>
 
       <div className="flex gap-3 items-center">

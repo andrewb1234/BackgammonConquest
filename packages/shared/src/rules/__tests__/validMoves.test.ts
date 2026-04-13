@@ -174,3 +174,39 @@ describe("hasAnyValidMove", () => {
     expect(hasAnyValidMove(board, "HOST", dice, diceUsed)).toBe(false);
   });
 });
+
+describe("Angelic Protection", () => {
+  it("blocks enemy from hitting a protected blot", () => {
+    const board: BoardState = {
+      points: Array.from({ length: 24 }, () => ({ owner: null, count: 0, activeEffects: [] })),
+      bars: { HOST: 0, GUEST: 0 },
+      borneOff: { HOST: 0, GUEST: 0 },
+    };
+    board.points[5] = { owner: "HOST", count: 1, activeEffects: [] };
+    board.points[2] = {
+      owner: "GUEST",
+      count: 1,
+      activeEffects: [{ effectId: "ANGELIC_PROTECTION", duration: 2, expiresOnTurn: 5, sourcePlayerId: "guest" }],
+    };
+    const dice = [3, 5];
+    const diceUsed = [false, false];
+    const moves = getValidMoves(board, "HOST", dice, diceUsed);
+    const hitMove = moves.find((m) => m.fromPoint === 5 && m.toPoint === 2);
+    expect(hitMove).toBeUndefined();
+  });
+
+  it("allows hitting an unprotected blot", () => {
+    const board: BoardState = {
+      points: Array.from({ length: 24 }, () => ({ owner: null, count: 0, activeEffects: [] })),
+      bars: { HOST: 0, GUEST: 0 },
+      borneOff: { HOST: 0, GUEST: 0 },
+    };
+    board.points[5] = { owner: "HOST", count: 1, activeEffects: [] };
+    board.points[2] = { owner: "GUEST", count: 1, activeEffects: [] };
+    const dice = [3, 5];
+    const diceUsed = [false, false];
+    const moves = getValidMoves(board, "HOST", dice, diceUsed);
+    const hitMove = moves.find((m) => m.fromPoint === 5 && m.toPoint === 2);
+    expect(hitMove).toBeDefined();
+  });
+});

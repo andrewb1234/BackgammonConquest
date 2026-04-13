@@ -23,6 +23,7 @@ export default function BattleResultView() {
   }
 
   const myRole = gameState?.players.find((p) => p.playerId === clientId)?.role as PlayerRole | undefined;
+  const myPlayer = gameState?.players.find((p) => p.playerId === clientId);
   const isVictor = winner === myRole;
   const factionName = winner === "HOST" ? "Iron Hegemony" : winner === "GUEST" ? "Solar Covenant" : "Unknown";
 
@@ -47,6 +48,12 @@ export default function BattleResultView() {
           <div className="text-yellow-400">
             Solar Covenant Orbital Evacuation: {borneOff.GUEST}/15
           </div>
+        </div>
+      )}
+
+      {myPlayer && (
+        <div className="text-sm text-amber-300">
+          Void-Scrap: {myPlayer.voidScrap}
         </div>
       )}
 

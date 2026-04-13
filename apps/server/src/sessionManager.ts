@@ -182,3 +182,13 @@ export function markPlayerDisconnected(playerId: string): GameState | null {
 export function removePlayerFromIndex(playerId: string): void {
   playerSessionIndex.delete(playerId);
 }
+
+// ---------------------------------------------------------
+// TEST HELPERS
+// ---------------------------------------------------------
+
+export function _resetForTesting(): void {
+  sessions.clear();
+  sectorCodeIndex.clear();
+  playerSessionIndex.clear();
+}

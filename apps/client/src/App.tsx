@@ -47,7 +47,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
       {criticalError && (
         <div className="fixed top-0 inset-x-0 bg-red-900 text-red-200 p-3 text-center z-50">
           <span className="font-bold">Error {criticalError.code}:</span>{" "}
@@ -56,7 +56,9 @@ function App() {
         </div>
       )}
       <PeerOverlay />
-      {renderView()}
+      <div className="w-full max-w-2xl">
+        {renderView()}
+      </div>
     </div>
   );
 }

@@ -24,7 +24,14 @@ function getPoint(board: BoardState, index: number): Point {
 function isPointOpen(point: Point, role: PlayerRole): boolean {
   // Open if: empty, owned by player, or has exactly 1 opponent piece (hit)
   if (point.owner === null || point.owner === role) return true;
-  if (point.count === 1) return true; // can hit
+  if (point.count === 1) {
+    // Check for Angelic Protection — invulnerable points block enemy hits
+    const isProtected = point.activeEffects.some(
+      (e) => e.effectId === "ANGELIC_PROTECTION"
+    );
+    if (isProtected) return false;
+    return true; // can hit unprotected blot
+  }
   return false;
 }
 

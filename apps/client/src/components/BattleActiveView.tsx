@@ -18,6 +18,7 @@ export default function BattleActiveView() {
 
   const [selectedPoint, setSelectedPoint] = useState<number | "BAR" | null>(null);
   const [pendingMoves, setPendingMoves] = useState<ValidMove[]>([]);
+  const [targetingItem, setTargetingItem] = useState<string | null>(null);
 
   const myRole = gameState?.players.find((p) => p.playerId === clientId)?.role as PlayerRole | undefined;
   const myPlayer = gameState?.players.find((p) => p.playerId === clientId);
@@ -27,10 +28,16 @@ export default function BattleActiveView() {
   }, [sendGameIntent]);
 
   const handlePointClick = useCallback((pointIndex: number | "BAR") => {
+    // If in item targeting mode, use the clicked point as target
+    if (targetingItem && typeof pointIndex === "number") {
+      sendGameIntent("INTENT_USE_ITEM", { itemId: targetingItem, targetId: pointIndex });
+      setTargetingItem(null);
+      return;
+    }
     if (!isMyTurn || !dice) return;
     setSelectedPoint(pointIndex);
     setPendingMoves([]);
-  }, [isMyTurn, dice]);
+  }, [isMyTurn, dice, targetingItem, sendGameIntent]);
 
   const handleTargetClick = useCallback((targetIndex: number) => {
     if (!isMyTurn || !dice || selectedPoint === null) return;
@@ -117,6 +124,9 @@ export default function BattleActiveView() {
           <span className="text-sm text-gray-400">
             Turn {battle.turnCount} — {isMyTurn ? "Your turn" : "Opponent's turn"}
           </span>
+          <span className="text-xs text-amber-300">
+            Scrap: {myPlayer?.voidScrap ?? 0}
+          </span>
         </div>
       </div>
 
@@ -164,6 +174,10 @@ export default function BattleActiveView() {
               isValidTarget={validTargets.has(idx)}
               isMyPiece={points[idx].owner === myRole}
               canSelect={isMyTurn && !!dice && points[idx].owner === myRole}
+              isItemTarget={!!targetingItem && points[idx].count > 0 && (
+                (targetingItem === "AIR_STRIKE" && points[idx].owner !== myRole && points[idx].owner !== null && points[idx].count === 1) ||
+                (targetingItem === "ANGELIC_PROTECTION" && points[idx].owner === myRole)
+              )}
               onClick={() => handlePointClick(idx)}
               onTargetClick={() => handleTargetClick(idx)}
             />
@@ -204,6 +218,10 @@ export default function BattleActiveView() {
               isValidTarget={validTargets.has(idx)}
               isMyPiece={points[idx].owner === myRole}
               canSelect={isMyTurn && !!dice && points[idx].owner === myRole}
+              isItemTarget={!!targetingItem && points[idx].count > 0 && (
+                (targetingItem === "AIR_STRIKE" && points[idx].owner !== myRole && points[idx].owner !== null && points[idx].count === 1) ||
+                (targetingItem === "ANGELIC_PROTECTION" && points[idx].owner === myRole)
+              )}
               onClick={() => handlePointClick(idx)}
               onTargetClick={() => handleTargetClick(idx)}
             />
@@ -256,36 +274,44 @@ export default function BattleActiveView() {
         )}
 
         {/* Tactical Items */}
+        {targetingItem && (
+          <span className="text-amber-300 text-xs animate-pulse">
+            Click a point on the board to target →
+            <button
+              onClick={() => setTargetingItem(null)}
+              className="ml-2 text-gray-400 underline"
+            >
+              Cancel
+            </button>
+          </span>
+        )}
         {myPlayer?.loadout?.filter((i: TacticalItem) => !i.consumed).map((item: TacticalItem) => {
           const def = ITEM_CATALOG.find((d) => d.itemId === item.itemId);
           if (!def) return null;
           const canUse =
             isMyTurn &&
-            (def.trigger === "PRE_MOVE" && !dice) ||
-            (def.trigger === "POST_ROLL" && !!dice);
+            ((def.trigger === "PRE_MOVE" && !dice) ||
+            (def.trigger === "POST_ROLL" && !!dice));
+          const needsTarget = item.itemId !== "LUCKY_CHANCE";
+          const isActive = targetingItem === item.itemId;
           return (
             <button
               key={item.itemId}
               onClick={() => {
+                if (!canUse) return;
                 if (item.itemId === "LUCKY_CHANCE") {
                   sendGameIntent("INTENT_USE_ITEM", { itemId: item.itemId });
-                } else if (item.itemId === "SABOTAGE") {
-                  // Sabotage needs a target node — prompt for it
-                  const nodeId = prompt("Enter enemy node ID (0-6) to sabotage:");
-                  if (nodeId !== null) {
-                    sendGameIntent("INTENT_USE_ITEM", { itemId: item.itemId, targetId: parseInt(nodeId) });
-                  }
-                } else {
-                  // AIR_STRIKE / ANGELIC_PROTECTION need a point target
-                  const ptIdx = prompt("Enter point index (0-23) as target:");
-                  if (ptIdx !== null) {
-                    sendGameIntent("INTENT_USE_ITEM", { itemId: item.itemId, targetId: parseInt(ptIdx) });
-                  }
+                } else if (needsTarget) {
+                  setTargetingItem(isActive ? null : item.itemId);
                 }
               }}
               disabled={!canUse}
               className={`px-3 py-1 rounded text-xs transition ${
-                canUse ? "bg-amber-800 hover:bg-amber-700 text-amber-200" : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                isActive
+                  ? "bg-amber-600 text-white ring-2 ring-amber-400"
+                  : canUse
+                    ? "bg-amber-800 hover:bg-amber-700 text-amber-200"
+                    : "bg-gray-800 text-gray-500 cursor-not-allowed"
               }`}
             >
               {def.name}
@@ -316,6 +342,7 @@ function PointComponent({
   isValidTarget,
   isMyPiece,
   canSelect,
+  isItemTarget,
   onClick,
   onTargetClick,
 }: {
@@ -326,6 +353,7 @@ function PointComponent({
   isValidTarget: boolean;
   isMyPiece: boolean;
   canSelect: boolean;
+  isItemTarget?: boolean;
   onClick: () => void;
   onTargetClick: () => void;
 }) {
@@ -342,8 +370,9 @@ function PointComponent({
       className={`flex flex-col items-center w-[30px] cursor-pointer transition
         ${isSelected ? "ring-2 ring-amber-400 rounded" : ""}
         ${isValidTarget ? "ring-2 ring-green-500 rounded" : ""}
+        ${isItemTarget ? "ring-2 ring-amber-500 rounded bg-amber-900/30" : ""}
       `}
-      onClick={isValidTarget ? onTargetClick : canSelect ? onClick : undefined}
+      onClick={isItemTarget ? onClick : isValidTarget ? onTargetClick : canSelect ? onClick : undefined}
     >
       <div className={`${triangle} w-0 h-0`} />
       <div className={`flex flex-col items-center ${bgColor} rounded-sm min-h-[24px] w-full`}>

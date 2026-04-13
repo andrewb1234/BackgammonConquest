@@ -6,6 +6,7 @@ import type {
   SocketMessage,
   PlayerRole,
 } from "@backgammon-conquest/shared";
+import { WIN_REWARD, LOSS_REWARD } from "@backgammon-conquest/shared";
 import { getSessionByPlayerId } from "../sessionManager.js";
 import { broadcastStateUpdate, rejectIntent } from "../broadcast.js";
 
@@ -38,6 +39,20 @@ const CAPITAL_NODES: Record<PlayerRole, number> = {
   HOST: 0,
   GUEST: 6,
 };
+
+/**
+ * Apply Void-Scrap rewards: winner gets W × multiplier, loser gets L.
+ */
+function applyRewards(gameState: any, winner: PlayerRole, multiplier: number): void {
+  const loserRole: PlayerRole = winner === "HOST" ? "GUEST" : "HOST";
+  for (const player of gameState.players) {
+    if (player.role === winner) {
+      player.voidScrap += WIN_REWARD * multiplier;
+    } else if (player.role === loserRole) {
+      player.voidScrap += LOSS_REWARD;
+    }
+  }
+}
 
 // Server-side acknowledgment tracking (not part of GameState broadcast)
 const acknowledgmentTracker = new Map<string, Set<string>>();
@@ -109,12 +124,16 @@ export function handleAcknowledgeResult(
     const loserRole: PlayerRole = winner === "HOST" ? "GUEST" : "HOST";
     const loserCapital = CAPITAL_NODES[loserRole];
 
+    // Apply Void-Scrap rewards
+    const multiplier = gameState.battle?.escalation?.multiplier ?? 1;
+    applyRewards(gameState, winner, multiplier);
+
     if (contestedNodeId === loserCapital) {
       // Capital captured — global win!
       gameState.phase = "RESOLUTION"; // stays RESOLUTION but now it's campaign-level
       gameState.campaignWinner = winner;
       gameState.stateVersion++;
-      broadcastStateUpdate(io, gameState, ["phase", "campaign.nodes", "campaignWinner"]);
+      broadcastStateUpdate(io, gameState, ["phase", "campaign.nodes", "campaignWinner", "players"]);
       return;
     }
   }
@@ -131,7 +150,7 @@ export function handleAcknowledgeResult(
   }
 
   gameState.stateVersion++;
-  broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaign.activePlayerId"]);
+  broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaign.activePlayerId", "players"]);
 }
 
 // ---------------------------------------------------------
@@ -180,6 +199,10 @@ export function handleIntentForfeit(
       node.owner = winnerRole;
     }
 
+    // Apply Void-Scrap rewards (forfeit)
+    const multiplier = gameState.battle?.escalation?.multiplier ?? 1;
+    applyRewards(gameState, winnerRole, multiplier);
+
     // Check capital capture
     const loserCapital = CAPITAL_NODES[role];
     if (contestedNodeId === loserCapital) {
@@ -187,7 +210,7 @@ export function handleIntentForfeit(
       gameState.campaignWinner = winnerRole;
       gameState.battle = undefined;
       gameState.stateVersion++;
-      broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaignWinner"]);
+      broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaignWinner", "players"]);
       return;
     }
   }
@@ -198,5 +221,5 @@ export function handleIntentForfeit(
   gameState.battle = undefined;
   gameState.stateVersion++;
 
-  broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaignWinner"]);
+  broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaignWinner", "players"]);
 }
