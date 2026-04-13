@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import type { BattleState, PlayerRole, Point } from "@backgammon-conquest/shared";
 import type { ValidMove, TacticalItem } from "@backgammon-conquest/shared";
@@ -19,13 +19,23 @@ export default function BattleActiveView() {
   const [selectedPoint, setSelectedPoint] = useState<number | "BAR" | null>(null);
   const [pendingMoves, setPendingMoves] = useState<ValidMove[]>([]);
   const [targetingItem, setTargetingItem] = useState<string | null>(null);
+  const [diceRolling, setDiceRolling] = useState(false);
 
   const myRole = gameState?.players.find((p) => p.playerId === clientId)?.role as PlayerRole | undefined;
   const myPlayer = gameState?.players.find((p) => p.playerId === clientId);
 
   const handleRoll = useCallback(() => {
+    setDiceRolling(true);
     sendGameIntent("INTENT_ROLL", {});
   }, [sendGameIntent]);
+
+  // Clear rolling animation once dice appear
+  useEffect(() => {
+    if (dice && diceRolling) {
+      const t = setTimeout(() => setDiceRolling(false), 400);
+      return () => clearTimeout(t);
+    }
+  }, [dice, diceRolling]);
 
   const handlePointClick = useCallback((pointIndex: number | "BAR") => {
     // If in item targeting mode, use the clicked point as target
@@ -136,8 +146,9 @@ export default function BattleActiveView() {
           dice.map((d, i) => (
             <div
               key={i}
-              className={`w-10 h-10 rounded border-2 flex items-center justify-center font-bold text-lg
+              className={`w-10 h-10 rounded border-2 flex items-center justify-center font-bold text-lg transition-all duration-300
                 ${diceUsed[i] ? "border-gray-700 text-gray-600 bg-gray-900" : "border-amber-500 text-amber-400 bg-gray-800"}
+                ${diceRolling ? "animate-bounce scale-110" : ""}
               `}
             >
               {d}
@@ -377,11 +388,14 @@ function PointComponent({
       <div className={`${triangle} w-0 h-0`} />
       <div className={`flex flex-col items-center ${bgColor} rounded-sm min-h-[24px] w-full`}>
         {hasPieces && (
-          <span className={`text-[10px] font-bold ${ownerColor}`}>
+          <span className={`text-[10px] font-bold ${ownerColor} transition-all duration-200`}>
             {point.count}
           </span>
         )}
         <span className="text-[8px] text-gray-600">{index}</span>
+        {point.activeEffects?.length > 0 && (
+          <span className="text-[7px] text-cyan-400 animate-pulse">🛡</span>
+        )}
       </div>
     </div>
   );

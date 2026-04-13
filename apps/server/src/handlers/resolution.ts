@@ -20,6 +20,47 @@ function getPlayerRole(gameState: any, playerId: string): PlayerRole | null {
 }
 
 /**
+ * Apply forfeit: the loserRole player loses, opponent wins.
+ * Handles node ownership, Void-Scrap rewards, capital capture, and phase transition.
+ * Returns the broadcast deltas.
+ */
+export function applyForfeit(gameState: any, loserRole: PlayerRole): string[] {
+  const winnerRole: PlayerRole = loserRole === "HOST" ? "GUEST" : "HOST";
+  const deltas: string[] = ["phase", "battle", "campaign.nodes", "campaignWinner", "players"];
+
+  // If in battle, the contested node goes to the winner
+  if (gameState.battle) {
+    const contestedNodeId = gameState.battle.contestedNodeId;
+    const node = gameState.campaign.nodes[contestedNodeId];
+    if (node) {
+      node.owner = winnerRole;
+    }
+
+    // Apply Void-Scrap rewards
+    const multiplier = gameState.battle?.escalation?.multiplier ?? 1;
+    applyRewards(gameState, winnerRole, multiplier);
+
+    // Check capital capture
+    const loserCapital = CAPITAL_NODES[loserRole];
+    if (contestedNodeId === loserCapital) {
+      gameState.phase = "RESOLUTION";
+      gameState.campaignWinner = winnerRole;
+      gameState.battle = undefined;
+      gameState.stateVersion++;
+      return deltas;
+    }
+  }
+
+  // Transition to RESOLUTION (forfeit = full campaign loss)
+  gameState.phase = "RESOLUTION";
+  gameState.campaignWinner = winnerRole;
+  gameState.battle = undefined;
+  gameState.stateVersion++;
+
+  return deltas;
+}
+
+/**
  * Determine battle winner from the board state.
  * The winner is the player who has borne off all 15 pieces.
  * If in RESOLUTION phase, we check borneOff counts.
@@ -189,37 +230,6 @@ export function handleIntentForfeit(
   }
 
   // The forfeiting player loses — opponent wins
-  const winnerRole: PlayerRole = role === "HOST" ? "GUEST" : "HOST";
-
-  // If in battle, the contested node goes to the winner
-  if (gameState.battle) {
-    const contestedNodeId = gameState.battle.contestedNodeId;
-    const node = gameState.campaign.nodes[contestedNodeId];
-    if (node) {
-      node.owner = winnerRole;
-    }
-
-    // Apply Void-Scrap rewards (forfeit)
-    const multiplier = gameState.battle?.escalation?.multiplier ?? 1;
-    applyRewards(gameState, winnerRole, multiplier);
-
-    // Check capital capture
-    const loserCapital = CAPITAL_NODES[role];
-    if (contestedNodeId === loserCapital) {
-      gameState.phase = "RESOLUTION";
-      gameState.campaignWinner = winnerRole;
-      gameState.battle = undefined;
-      gameState.stateVersion++;
-      broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaignWinner", "players"]);
-      return;
-    }
-  }
-
-  // Transition to RESOLUTION (battle forfeit = opponent wins the battle)
-  gameState.phase = "RESOLUTION";
-  gameState.campaignWinner = winnerRole; // forfeit = full campaign loss
-  gameState.battle = undefined;
-  gameState.stateVersion++;
-
-  broadcastStateUpdate(io, gameState, ["phase", "battle", "campaign.nodes", "campaignWinner", "players"]);
+  const deltas = applyForfeit(gameState, role);
+  broadcastStateUpdate(io, gameState, deltas);
 }

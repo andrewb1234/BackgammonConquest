@@ -13,6 +13,7 @@ import {
   broadcastStateUpdate,
   broadcastPeerDisconnected,
 } from "./broadcast.js";
+import { applyForfeit } from "./handlers/resolution.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -75,8 +76,12 @@ io.on("connection", (socket: Socket) => {
       const player = current.players.find((p) => p.playerId === clientId);
       if (player && !player.connected) {
         console.log(`[Reconnect] Grace expired for ${clientId} — forfeit`);
+
+        // Determine loser role and apply forfeit
+        const loserRole = player.role;
+        const deltas = applyForfeit(current, loserRole);
         removePlayerFromIndex(clientId);
-        // TODO: trigger forfeit logic when implemented
+        broadcastStateUpdate(io, current, deltas);
       }
     }, RECONNECT_GRACE_PERIOD_MS);
   });

@@ -38,11 +38,11 @@ export default function CampaignMapView() {
             }}
             disabled={!canTarget(node)}
             className={`
-              w-16 h-16 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-bold transition
+              w-16 h-16 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-bold transition-all duration-200
               ${node.owner === "HOST" ? "border-red-700 bg-red-900/20 text-red-400" : ""}
               ${node.owner === "GUEST" ? "border-yellow-600 bg-yellow-900/20 text-yellow-400" : ""}
               ${node.owner === "NEUTRAL" ? "border-gray-600 bg-gray-800 text-gray-400" : ""}
-              ${canTarget(node) ? "hover:ring-2 hover:ring-amber-400 cursor-pointer" : "opacity-60"}
+              ${canTarget(node) ? "hover:ring-2 hover:ring-amber-400 hover:scale-110 cursor-pointer" : "opacity-60"}
             `}
           >
             <span>N{node.nodeId + 1}</span>

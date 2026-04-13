@@ -31,8 +31,8 @@ export default function BattleResultView() {
     <div className="flex flex-col items-center gap-6">
       <h2 className="text-2xl font-bold text-amber-400">Battle Resolution</h2>
 
-      <div className={`text-center p-6 rounded-lg border-2 ${isVictor ? "border-green-600 bg-green-900/20" : "border-red-600 bg-red-900/20"}`}>
-        <p className="text-4xl font-bold mb-2">
+      <div className={`text-center p-6 rounded-lg border-2 transition-all duration-500 ${isVictor ? "border-green-600 bg-green-900/20 scale-100" : "border-red-600 bg-red-900/20 scale-95"}`}>
+        <p className={`text-4xl font-bold mb-2 ${isVictor ? "animate-pulse" : ""}`}>
           {isVictor ? "Victory" : "Defeat"}
         </p>
         <p className="text-gray-400">
