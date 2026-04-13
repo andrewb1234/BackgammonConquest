@@ -1,38 +1,41 @@
 # State of Project
 
-## Last Completed: Phase 3 — Client Socket.io Connection & Zustand Store
+## Last Completed: Phase 4 — Campaign Logic & Backgammon Rules Engine
 
-### What Was Built (Phase 3)
-- **Socket.io client service** (`services/socket.ts`): `connectSocket`, `identify`, `sendIntent<T>` with `SocketMessage<T>` envelope, typed listeners for all server broadcasts (`STATE_UPDATE`, `REJECT_INTENT`, `PEER_DISCONNECTED`, `PEER_RECONNECTED`, `CRITICAL_ERROR`, `SESSION_CREATED`, `SESSION_JOINED`)
-- **Zustand game store** (`store/useGameStore.ts`): `GameState` sync on `STATE_UPDATE`, `REJECT_INTENT` handler with `stateVersion` sync, peer disconnect/reconnect tracking, critical error handling, UI view derivation from `GameState.phase` per `UI_STATE_MACHINE.md`, intent dispatch helpers (`createSession`, `joinSession`, `lockFaction`, `sendGameIntent`)
-- **LobbyView**: Create Game / Join Game with 6-character sector code input
-- **WaitingView**: Displays sector code for host, waiting indicator with pulse animation
-- **FactionSelectView**: Iron Hegemony / Solar Covenant with mutually exclusive selection, rejection feedback, opponent-waiting state
-- **CampaignMapView**: 7-node display with active player targeting, owner color coding
-- **PeerOverlay**: Blocking overlay on opponent disconnect
-- **App.tsx**: View router driven by `store.uiView`, critical error banner, placeholder views for unimplemented phases
-- **SessionCreatedPayload / SessionJoinedPayload**: Added to shared payloads (server already emits these)
+### What Was Built (Phase 4)
+- **Backgammon rules engine** (`/packages/shared/src/rules/`):
+  - `boardSetup.ts`: `createInitialBoard` (standard 24-point setup), `getDirection` (HOST: -1, GUEST: +1), `isAllInHomeBoard`, `isWin` (15 pieces borne off)
+  - `validMoves.ts`: `getValidMoves` (all legal moves for current dice), `applyMove` (board mutation with hit/bar/bear-off), `hasAnyValidMove`; handles bar entry, normal moves, hitting, bearing off (exact + overshoot), doubles (4 dice)
+- **LOCK_FACTION → CAMPAIGN transition**: When both players lock factions, server transitions `phase` from `LOBBY` to `CAMPAIGN`
+- **TARGET_NODE handler** (`campaign.ts`): Validates active player, adjacency (linear 7-node map), non-own-node targeting; creates `BattleState` with initial board, transitions to `BATTLE` phase
+- **INTENT_ROLL handler** (`battle.ts`): Server-authoritative dice generation (2 dice, doubles → 4), auto-pass if no valid moves
+- **INTENT_MOVE handler** (`battle.ts`): Validates each move against rules engine, consumes dice, applies moves sequentially with hit detection, auto-passes turn when all dice used or no valid moves remain, detects win → `RESOLUTION` phase
+- **BattleActiveView UI**: 24-point board with top/bottom row layout, piece counts, owner colors, Void-Buffer (bar) display, Orbital Evacuation (borne off) counters, dice display with used/unused state, Roll Dice button, click-to-select + click-to-target move builder, Submit/Clear pending moves, valid target highlighting, rejection feedback
+
+### What Was Built (Phase 3 — carried forward)
+- **Client**: Socket.io service, Zustand store, LobbyView, WaitingView, FactionSelectView, CampaignMapView, PeerOverlay
 
 ### What Was Built (Phase 2 — carried forward)
-- **Server**: Session manager, intent router, broadcast system, session/lobby handlers, stub handlers for remaining intents, disconnect/reconnect with 45s grace period
+- **Server**: Session manager, intent router, broadcast system, session/lobby handlers, disconnect/reconnect
 
 ### What Was Built (Phase 1 — carried forward)
 - **Monorepo**: npm workspaces with 3 packages
 - **Shared**: All state model interfaces, WebSocket payload schemas, game constants
 
 ### Technical Debt / Notes
-- Battle, loadout, and escalation handlers are server stubs (reject with INVALID_PHASE)
-- Campaign TARGET_NODE handler is a server stub
-- LOADOUT, BATTLE_ACTIVE, ESCALATION_PROMPT, BATTLE_RESULT, CAMPAIGN_RESULT views are placeholder UIs
-- No unit tests written yet for shared package
-- No integration tests written yet for server
+- READY_LOADOUT, INTENT_USE_ITEM, INTENT_INVOKE_ESCALATION, INTENT_RESPOND_ESCALATION, INTENT_FORFEIT, ACKNOWLEDGE_RESULT handlers are still stubs
+- LOADOUT, ESCALATION_PROMPT, BATTLE_RESULT, CAMPAIGN_RESULT views are placeholder UIs
+- CampaignMapView node ownership uses `clientId` comparison — should use player role
+- No unit tests for rules engine or server handlers
+- No integration tests
 - Forfeit logic on grace period expiry is a TODO stub
-- CampaignMapView node ownership check uses `clientId` instead of player role — needs fix when campaign logic is implemented
+- BattleActiveView move builder doesn't validate against server rules engine client-side (relies on server rejection)
+- RESOLUTION phase has no handler to transition back to CAMPAIGN or end the game
 
-### Next Step: Phase 4 — Campaign Logic & Backgammon Rules Engine
-1. Implement campaign phase transition in server (LOBBY → CAMPAIGN after both factions locked)
-2. Implement TARGET_NODE handler: validate ownership, transition to BATTLE phase
-3. Implement backgammon rules engine in `/packages/shared/src/rules/` (valid moves, dice consumption, hitting, bearing off)
-4. Implement INTENT_ROLL handler: server-authoritative dice generation
-5. Implement INTENT_MOVE handler: validate moves against rules engine, mutate board state
-6. Build BATTLE_ACTIVE UI: 24-point board rendering with piece counts
+### Next Step: Phase 5 — Resolution Flow & Game Polish
+1. Implement ACKNOWLEDGE_RESULT handler: transition RESOLUTION → CAMPAIGN (update node ownership, check capital capture for global win)
+2. Implement INTENT_FORFEIT handler: end session, notify opponent
+3. Build BATTLE_RESULT view: show winner, acknowledge button
+4. Build CAMPAIGN_RESULT view: show global winner, return to lobby
+5. Add unit tests for rules engine (Vitest)
+6. Polish UI: responsive board layout, animations, sound effects
