@@ -1,16 +1,24 @@
 # State of Project
 
-## Last Completed: Phase 4 — Campaign Logic & Backgammon Rules Engine
+## Last Completed: Phase 5 — Resolution Flow & Game Polish
 
-### What Was Built (Phase 4)
-- **Backgammon rules engine** (`/packages/shared/src/rules/`):
-  - `boardSetup.ts`: `createInitialBoard` (standard 24-point setup), `getDirection` (HOST: -1, GUEST: +1), `isAllInHomeBoard`, `isWin` (15 pieces borne off)
-  - `validMoves.ts`: `getValidMoves` (all legal moves for current dice), `applyMove` (board mutation with hit/bar/bear-off), `hasAnyValidMove`; handles bar entry, normal moves, hitting, bearing off (exact + overshoot), doubles (4 dice)
-- **LOCK_FACTION → CAMPAIGN transition**: When both players lock factions, server transitions `phase` from `LOBBY` to `CAMPAIGN`
-- **TARGET_NODE handler** (`campaign.ts`): Validates active player, adjacency (linear 7-node map), non-own-node targeting; creates `BattleState` with initial board, transitions to `BATTLE` phase
-- **INTENT_ROLL handler** (`battle.ts`): Server-authoritative dice generation (2 dice, doubles → 4), auto-pass if no valid moves
-- **INTENT_MOVE handler** (`battle.ts`): Validates each move against rules engine, consumes dice, applies moves sequentially with hit detection, auto-passes turn when all dice used or no valid moves remain, detects win → `RESOLUTION` phase
-- **BattleActiveView UI**: 24-point board with top/bottom row layout, piece counts, owner colors, Void-Buffer (bar) display, Orbital Evacuation (borne off) counters, dice display with used/unused state, Roll Dice button, click-to-select + click-to-target move builder, Submit/Clear pending moves, valid target highlighting, rejection feedback
+### What Was Built (Phase 5)
+- **ACKNOWLEDGE_RESULT handler** (`resolution.ts`): Both players must acknowledge before battle result is processed. Server-side acknowledgment tracking via Map. On both ack: updates contested node ownership to battle winner, checks capital capture (node 0 = HOST capital, node 6 = GUEST capital), transitions RESOLUTION → CAMPAIGN_RESULT (capital captured) or RESOLUTION → CAMPAIGN (no capital, switch active player)
+- **INTENT_FORFEIT handler** (`resolution.ts`): Allowed during BATTLE or CAMPAIGN phases. Opponent wins contested node and campaign. Checks capital capture on forfeit
+- **BattleResultView**: Shows victory/defeat, borne-off counts, acknowledge button to proceed back to campaign
+- **CampaignResultView**: Shows galactic supremacy/total defeat, final campaign map state, return to lobby button
+- **CampaignMapView fix**: Uses player role for node targeting instead of clientId comparison. Added forfeit button
+- **BattleActiveView**: Added forfeit button
+- **deriveUIView update**: RESOLUTION phase now routes to CAMPAIGN_RESULT when `campaignWinner` is set, BATTLE_RESULT otherwise
+- **GameState.campaignWinner**: New optional field (`PlayerRole | undefined`) for signaling global campaign victory to clients
+- **Unit tests** (Vitest, 25 tests passing):
+  - `boardSetup.test.ts`: createInitialBoard, getDirection, isAllInHomeBoard, isWin
+  - `validMoves.test.ts`: getValidMoves (simple moves, bar entry, used dice, bearing off, hitting, blocked points), applyMove (normal move, hit to bar, bar entry, bear off), hasAnyValidMove
+
+### What Was Built (Phase 4 — carried forward)
+- **Rules engine**: boardSetup, validMoves, hasAnyValidMove
+- **Server handlers**: LOCK_FACTION → CAMPAIGN, TARGET_NODE, INTENT_ROLL, INTENT_MOVE
+- **BattleActiveView**: 24-point board, dice, move builder
 
 ### What Was Built (Phase 3 — carried forward)
 - **Client**: Socket.io service, Zustand store, LobbyView, WaitingView, FactionSelectView, CampaignMapView, PeerOverlay
@@ -23,19 +31,18 @@
 - **Shared**: All state model interfaces, WebSocket payload schemas, game constants
 
 ### Technical Debt / Notes
-- READY_LOADOUT, INTENT_USE_ITEM, INTENT_INVOKE_ESCALATION, INTENT_RESPOND_ESCALATION, INTENT_FORFEIT, ACKNOWLEDGE_RESULT handlers are still stubs
-- LOADOUT, ESCALATION_PROMPT, BATTLE_RESULT, CAMPAIGN_RESULT views are placeholder UIs
-- CampaignMapView node ownership uses `clientId` comparison — should use player role
-- No unit tests for rules engine or server handlers
-- No integration tests
-- Forfeit logic on grace period expiry is a TODO stub
+- READY_LOADOUT, INTENT_USE_ITEM, INTENT_INVOKE_ESCALATION, INTENT_RESPOND_ESCALATION handlers are still stubs
+- LOADOUT, ESCALATION_PROMPT views are placeholder UIs
+- Forfeit logic on grace period expiry is a TODO stub (disconnect forfeit)
 - BattleActiveView move builder doesn't validate against server rules engine client-side (relies on server rejection)
-- RESOLUTION phase has no handler to transition back to CAMPAIGN or end the game
+- No integration tests for server handlers
+- CampaignMapView doesn't validate adjacency client-side (relies on server rejection)
+- No animations, sound effects, or responsive layout polish yet
 
-### Next Step: Phase 5 — Resolution Flow & Game Polish
-1. Implement ACKNOWLEDGE_RESULT handler: transition RESOLUTION → CAMPAIGN (update node ownership, check capital capture for global win)
-2. Implement INTENT_FORFEIT handler: end session, notify opponent
-3. Build BATTLE_RESULT view: show winner, acknowledge button
-4. Build CAMPAIGN_RESULT view: show global winner, return to lobby
-5. Add unit tests for rules engine (Vitest)
-6. Polish UI: responsive board layout, animations, sound effects
+### Next Step: Phase 6 — Loadout & Escalation (Tactical Items)
+1. Implement READY_LOADOUT handler: validate item slots, transition BATTLE → BATTLE (loadout complete)
+2. Implement INTENT_USE_ITEM handler: apply tactical item effects
+3. Implement INTENT_INVOKE_ESCALATION / INTENT_RESPOND_ESCALATION handlers
+4. Build LOADOUT view: item selection with Void-Scrap economy
+5. Build ESCALATION_PROMPT view: escalation offer and response UI
+6. Add integration tests for server handlers
