@@ -43,6 +43,11 @@ export function handleIntentRoll(
     return;
   }
 
+  if (gameState.battle.subPhase !== "ACTIVE") {
+    rejectIntent(socket, "INTENT_ROLL", "INVALID_PHASE", gameState.stateVersion);
+    return;
+  }
+
   if (gameState.battle.activePlayerId !== playerId) {
     rejectIntent(socket, "INTENT_ROLL", "NOT_ACTIVE_PLAYER", gameState.stateVersion);
     return;

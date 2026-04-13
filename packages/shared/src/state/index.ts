@@ -12,6 +12,8 @@ export type NodeOwner = PlayerRole | "NEUTRAL";
 
 export type EscalationStatus = "IDLE" | "OFFERED";
 
+export type BattleSubPhase = "LOADOUT" | "ACTIVE";
+
 export type EscalationResponse = "ACCEPT" | "RETREAT";
 
 // ---------------------------------------------------------
@@ -69,6 +71,9 @@ export interface BattleState {
   dice: number[] | null;
   diceUsed: boolean[];
   escalation: EscalationState;
+  subPhase: BattleSubPhase;
+  loadoutReady: Record<PlayerRole, boolean>;
+  disabledModifierNodeId: number | null;
 }
 
 export interface BoardState {

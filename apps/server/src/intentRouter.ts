@@ -11,7 +11,7 @@ import {
   handleIntentUseItem,
   handleIntentInvokeEscalation,
   handleIntentRespondEscalation,
-} from "./handlers/stubs.js";
+} from "./handlers/loadoutItems.js";
 
 // ---------------------------------------------------------
 // INTENT ROUTER

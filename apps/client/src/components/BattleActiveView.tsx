@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { useGameStore } from "../store/useGameStore";
 import type { BattleState, PlayerRole, Point } from "@backgammon-conquest/shared";
-import type { ValidMove } from "@backgammon-conquest/shared";
+import type { ValidMove, TacticalItem } from "@backgammon-conquest/shared";
+import { ITEM_CATALOG } from "@backgammon-conquest/shared";
 
 export default function BattleActiveView() {
   const gameState = useGameStore((s) => s.gameState);
@@ -19,6 +20,7 @@ export default function BattleActiveView() {
   const [pendingMoves, setPendingMoves] = useState<ValidMove[]>([]);
 
   const myRole = gameState?.players.find((p) => p.playerId === clientId)?.role as PlayerRole | undefined;
+  const myPlayer = gameState?.players.find((p) => p.playerId === clientId);
 
   const handleRoll = useCallback(() => {
     sendGameIntent("INTENT_ROLL", {});
@@ -106,9 +108,16 @@ export default function BattleActiveView() {
       {/* Header */}
       <div className="flex items-center justify-between w-full px-4">
         <h2 className="text-xl font-bold text-amber-400">Planetary Battle</h2>
-        <span className="text-sm text-gray-400">
-          Turn {battle.turnCount} — {isMyTurn ? "Your turn" : "Opponent's turn"}
-        </span>
+        <div className="flex items-center gap-3">
+          {battle.escalation.multiplier > 1 && (
+            <span className="text-sm font-bold text-red-400">
+              {battle.escalation.multiplier}× Stakes
+            </span>
+          )}
+          <span className="text-sm text-gray-400">
+            Turn {battle.turnCount} — {isMyTurn ? "Your turn" : "Opponent's turn"}
+          </span>
+        </div>
       </div>
 
       {/* Dice */}
@@ -233,13 +242,64 @@ export default function BattleActiveView() {
         <p className="text-red-400 text-sm">Rejected: {lastRejection.reason}</p>
       )}
 
-      {/* Forfeit */}
-      <button
-        onClick={() => sendGameIntent("INTENT_FORFEIT", {})}
-        className="mt-2 px-4 py-1 bg-red-900/40 hover:bg-red-900/60 text-red-400 rounded text-sm transition"
-      >
-        Forfeit Battle
-      </button>
+      {/* Escalation & Items */}
+      <div className="flex flex-wrap gap-2 mt-2 items-center">
+        {/* Escalation: only controller can invoke, only before rolling */}
+        {isMyTurn && !dice && battle?.escalation.status === "IDLE" &&
+          battle.escalation.controllerPlayerId === clientId && (
+          <button
+            onClick={() => sendGameIntent("INTENT_INVOKE_ESCALATION", {})}
+            className="px-3 py-1 bg-red-800 hover:bg-red-700 text-red-200 rounded text-xs font-bold transition"
+          >
+            Escalate ({battle.escalation.multiplier * 2}×)
+          </button>
+        )}
+
+        {/* Tactical Items */}
+        {myPlayer?.loadout?.filter((i: TacticalItem) => !i.consumed).map((item: TacticalItem) => {
+          const def = ITEM_CATALOG.find((d) => d.itemId === item.itemId);
+          if (!def) return null;
+          const canUse =
+            isMyTurn &&
+            (def.trigger === "PRE_MOVE" && !dice) ||
+            (def.trigger === "POST_ROLL" && !!dice);
+          return (
+            <button
+              key={item.itemId}
+              onClick={() => {
+                if (item.itemId === "LUCKY_CHANCE") {
+                  sendGameIntent("INTENT_USE_ITEM", { itemId: item.itemId });
+                } else if (item.itemId === "SABOTAGE") {
+                  // Sabotage needs a target node — prompt for it
+                  const nodeId = prompt("Enter enemy node ID (0-6) to sabotage:");
+                  if (nodeId !== null) {
+                    sendGameIntent("INTENT_USE_ITEM", { itemId: item.itemId, targetId: parseInt(nodeId) });
+                  }
+                } else {
+                  // AIR_STRIKE / ANGELIC_PROTECTION need a point target
+                  const ptIdx = prompt("Enter point index (0-23) as target:");
+                  if (ptIdx !== null) {
+                    sendGameIntent("INTENT_USE_ITEM", { itemId: item.itemId, targetId: parseInt(ptIdx) });
+                  }
+                }
+              }}
+              disabled={!canUse}
+              className={`px-3 py-1 rounded text-xs transition ${
+                canUse ? "bg-amber-800 hover:bg-amber-700 text-amber-200" : "bg-gray-800 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              {def.name}
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => sendGameIntent("INTENT_FORFEIT", {})}
+          className="px-3 py-1 bg-red-900/40 hover:bg-red-900/60 text-red-400 rounded text-xs transition"
+        >
+          Forfeit
+        </button>
+      </div>
     </div>
   );
 }

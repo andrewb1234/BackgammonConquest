@@ -7,6 +7,8 @@ import CampaignMapView from "./components/CampaignMapView";
 import BattleActiveView from "./components/BattleActiveView";
 import BattleResultView from "./components/BattleResultView";
 import CampaignResultView from "./components/CampaignResultView";
+import LoadoutView from "./components/LoadoutView";
+import EscalationPromptView from "./components/EscalationPromptView";
 import PeerOverlay from "./components/PeerOverlay";
 
 function App() {
@@ -30,11 +32,11 @@ function App() {
       case "CAMPAIGN_MAP":
         return <CampaignMapView />;
       case "LOADOUT":
-        return <PlaceholderView label="Loadout Selection" />;
+        return <LoadoutView />;
       case "BATTLE_ACTIVE":
         return <BattleActiveView />;
       case "ESCALATION_PROMPT":
-        return <PlaceholderView label="Escalation Prompt" />;
+        return <EscalationPromptView />;
       case "BATTLE_RESULT":
         return <BattleResultView />;
       case "CAMPAIGN_RESULT":
@@ -55,15 +57,6 @@ function App() {
       )}
       <PeerOverlay />
       {renderView()}
-    </div>
-  );
-}
-
-function PlaceholderView({ label }: { label: string }) {
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <h2 className="text-2xl font-bold text-gray-400">{label}</h2>
-      <p className="text-gray-600 text-sm">Not yet implemented</p>
     </div>
   );
 }

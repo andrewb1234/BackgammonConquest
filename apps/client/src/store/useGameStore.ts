@@ -74,6 +74,7 @@ function deriveUIView(gameState: GameState | null, hasSectorCode: boolean): UIVi
     case "CAMPAIGN":
       return "CAMPAIGN_MAP";
     case "BATTLE": {
+      if (gameState.battle?.subPhase === "LOADOUT") return "LOADOUT";
       if (gameState.battle?.escalation.status === "OFFERED") return "ESCALATION_PROMPT";
       return "BATTLE_ACTIVE";
     }

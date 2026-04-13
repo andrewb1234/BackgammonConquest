@@ -7,7 +7,7 @@ import type {
   EscalationState,
   PlayerRole,
 } from "@backgammon-conquest/shared";
-import { createInitialBoard } from "@backgammon-conquest/shared";
+import { createInitialBoard, INITIAL_VOID_SCRAP } from "@backgammon-conquest/shared";
 import { getSessionByPlayerId } from "../sessionManager.js";
 import { broadcastStateUpdate, rejectIntent } from "../broadcast.js";
 
@@ -106,13 +106,23 @@ export function handleTargetNode(
     escalation: {
       status: "IDLE",
       multiplier: 1,
-      controllerPlayerId: null,
+      controllerPlayerId: playerId, // Attacker is initial escalation controller
     } as EscalationState,
+    subPhase: "LOADOUT",
+    loadoutReady: { HOST: false, GUEST: false },
+    disabledModifierNodeId: null,
   };
+
+  // Grant initial Void-Scrap for loadout purchasing
+  for (const player of gameState.players) {
+    player.voidScrap = INITIAL_VOID_SCRAP;
+    player.loadout = [];
+    player.activeEffects = [];
+  }
 
   gameState.battle = battle;
   gameState.phase = "BATTLE";
   gameState.stateVersion++;
 
-  broadcastStateUpdate(io, gameState, ["phase", "battle"]);
+  broadcastStateUpdate(io, gameState, ["phase", "battle", "players"]);
 }
