@@ -1,0 +1,21 @@
+{
+  "name": "backgammon-conquest",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A galactic conquest game utilizing Backgammon mechanics for planetary battles",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev -w apps/client",
+    "dev:server": "npm run dev -w apps/server",
+    "build": "npm run build -w packages/shared && npm run build -w apps/client && npm run build -w apps/server",
+    "build:shared": "npm run build -w packages/shared",
+    "test": "npm run test -w packages/shared",
+    "lint": "npm run lint -ws"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
