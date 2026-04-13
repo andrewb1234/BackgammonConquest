@@ -4,6 +4,7 @@ import LobbyView from "./components/LobbyView";
 import WaitingView from "./components/WaitingView";
 import FactionSelectView from "./components/FactionSelectView";
 import CampaignMapView from "./components/CampaignMapView";
+import BattleActiveView from "./components/BattleActiveView";
 import PeerOverlay from "./components/PeerOverlay";
 
 function App() {
@@ -29,7 +30,7 @@ function App() {
       case "LOADOUT":
         return <PlaceholderView label="Loadout Selection" />;
       case "BATTLE_ACTIVE":
-        return <PlaceholderView label="Battle Board" />;
+        return <BattleActiveView />;
       case "ESCALATION_PROMPT":
         return <PlaceholderView label="Escalation Prompt" />;
       case "BATTLE_RESULT":

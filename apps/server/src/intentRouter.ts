@@ -3,11 +3,10 @@ import type { Server as SocketServer } from "socket.io";
 import type { IntentType, SocketMessage } from "@backgammon-conquest/shared";
 import { handleCreateSession, handleJoinSession, handleRejoinSession } from "./handlers/session.js";
 import { handleLockFaction } from "./handlers/lobby.js";
+import { handleTargetNode } from "./handlers/campaign.js";
+import { handleIntentRoll, handleIntentMove } from "./handlers/battle.js";
 import {
-  handleTargetNode,
   handleReadyLoadout,
-  handleIntentRoll,
-  handleIntentMove,
   handleIntentUseItem,
   handleIntentInvokeEscalation,
   handleIntentRespondEscalation,

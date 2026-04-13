@@ -47,5 +47,16 @@ export function handleLockFaction(
   player.faction = faction;
   gameState.stateVersion++;
 
-  broadcastStateUpdate(io, gameState, [`players`]);
+  // Check if both factions are locked → transition to CAMPAIGN
+  const bothLocked = gameState.players.every((p) => p.faction !== null);
+  if (bothLocked) {
+    gameState.phase = "CAMPAIGN";
+    gameState.stateVersion++;
+  }
+
+  const delta = bothLocked
+    ? ["players", "phase"]
+    : ["players"];
+
+  broadcastStateUpdate(io, gameState, delta);
 }

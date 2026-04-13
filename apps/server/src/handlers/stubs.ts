@@ -3,10 +3,7 @@ import type { Server as SocketServer } from "socket.io";
 import type {
   IntentType,
   SocketMessage,
-  TargetNodePayload,
   ReadyLoadoutPayload,
-  IntentRollPayload,
-  IntentMovePayload,
   IntentUseItemPayload,
   IntentInvokeEscalationPayload,
   IntentRespondEscalationPayload,
@@ -37,21 +34,6 @@ function checkStaleState(
 // STUB HANDLERS — reject with INVALID_PHASE until game logic is implemented
 // ---------------------------------------------------------
 
-export function handleTargetNode(
-  _io: SocketServer,
-  socket: Socket,
-  msg: SocketMessage<TargetNodePayload>,
-): void {
-  const gameState = getSessionByPlayerId((socket.data as { clientId?: string }).clientId ?? "");
-  if (!gameState) {
-    rejectIntent(socket, "TARGET_NODE", "INVALID_PHASE", 0);
-    return;
-  }
-  if (checkStaleState(socket, "TARGET_NODE", msg.payload.stateVersion, gameState.stateVersion)) return;
-
-  rejectIntent(socket, "TARGET_NODE", "INVALID_PHASE", gameState.stateVersion);
-}
-
 export function handleReadyLoadout(
   _io: SocketServer,
   socket: Socket,
@@ -65,36 +47,6 @@ export function handleReadyLoadout(
   if (checkStaleState(socket, "READY_LOADOUT", msg.payload.stateVersion, gameState.stateVersion)) return;
 
   rejectIntent(socket, "READY_LOADOUT", "INVALID_PHASE", gameState.stateVersion);
-}
-
-export function handleIntentRoll(
-  _io: SocketServer,
-  socket: Socket,
-  msg: SocketMessage<IntentRollPayload>,
-): void {
-  const gameState = getSessionByPlayerId((socket.data as { clientId?: string }).clientId ?? "");
-  if (!gameState) {
-    rejectIntent(socket, "INTENT_ROLL", "INVALID_PHASE", 0);
-    return;
-  }
-  if (checkStaleState(socket, "INTENT_ROLL", msg.payload.stateVersion, gameState.stateVersion)) return;
-
-  rejectIntent(socket, "INTENT_ROLL", "INVALID_PHASE", gameState.stateVersion);
-}
-
-export function handleIntentMove(
-  _io: SocketServer,
-  socket: Socket,
-  msg: SocketMessage<IntentMovePayload>,
-): void {
-  const gameState = getSessionByPlayerId((socket.data as { clientId?: string }).clientId ?? "");
-  if (!gameState) {
-    rejectIntent(socket, "INTENT_MOVE", "INVALID_PHASE", 0);
-    return;
-  }
-  if (checkStaleState(socket, "INTENT_MOVE", msg.payload.stateVersion, gameState.stateVersion)) return;
-
-  rejectIntent(socket, "INTENT_MOVE", "INVALID_PHASE", gameState.stateVersion);
 }
 
 export function handleIntentUseItem(
