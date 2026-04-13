@@ -1,19 +1,26 @@
 # State of Project
 
-## Last Completed: Phase 5 — Resolution Flow & Game Polish
+## Last Completed: Phase 6 — Loadout & Escalation (Tactical Items)
 
-### What Was Built (Phase 5)
-- **ACKNOWLEDGE_RESULT handler** (`resolution.ts`): Both players must acknowledge before battle result is processed. Server-side acknowledgment tracking via Map. On both ack: updates contested node ownership to battle winner, checks capital capture (node 0 = HOST capital, node 6 = GUEST capital), transitions RESOLUTION → CAMPAIGN_RESULT (capital captured) or RESOLUTION → CAMPAIGN (no capital, switch active player)
-- **INTENT_FORFEIT handler** (`resolution.ts`): Allowed during BATTLE or CAMPAIGN phases. Opponent wins contested node and campaign. Checks capital capture on forfeit
-- **BattleResultView**: Shows victory/defeat, borne-off counts, acknowledge button to proceed back to campaign
-- **CampaignResultView**: Shows galactic supremacy/total defeat, final campaign map state, return to lobby button
-- **CampaignMapView fix**: Uses player role for node targeting instead of clientId comparison. Added forfeit button
-- **BattleActiveView**: Added forfeit button
-- **deriveUIView update**: RESOLUTION phase now routes to CAMPAIGN_RESULT when `campaignWinner` is set, BATTLE_RESULT otherwise
-- **GameState.campaignWinner**: New optional field (`PlayerRole | undefined`) for signaling global campaign victory to clients
-- **Unit tests** (Vitest, 25 tests passing):
-  - `boardSetup.test.ts`: createInitialBoard, getDirection, isAllInHomeBoard, isWin
-  - `validMoves.test.ts`: getValidMoves (simple moves, bar entry, used dice, bearing off, hitting, blocked points), applyMove (normal move, hit to bar, bar entry, bear off), hasAnyValidMove
+### What Was Built (Phase 6)
+- **READY_LOADOUT handler** (`loadoutItems.ts`): Validates item count vs max slots (Maw node grants 3), validates Void-Scrap affordability, deducts cost, sets loadout. Both-ready → subPhase LOADOUT → ACTIVE
+- **INTENT_USE_ITEM handler** (`loadoutItems.ts`): AIR_STRIKE (enemy blot → bar), ANGELIC_PROTECTION (invulnerability 2 turns), LUCKY_CHANCE (dice re-roll), SABOTAGE (disable enemy node modifier)
+- **INTENT_INVOKE_ESCALATION handler** (`loadoutItems.ts`): Controller-only, before rolling, sets status=OFFERED
+- **INTENT_RESPOND_ESCALATION handler** (`loadoutItems.ts`): ACCEPT (doubles multiplier, transfers control), RETREAT (invoker wins node, capital capture check)
+- **LoadoutView**: Item catalog with costs/descriptions, Void-Scrap display, slot limits, ready-up with both-player sync
+- **EscalationPromptView**: Current/next multiplier display, accept/retreat buttons for responder, waiting for invoker
+- **BattleActiveView updates**: Escalation invoke button (controller, pre-roll), tactical item buttons (trigger-aware), multiplier display in header
+- **TARGET_NODE updates**: Sets subPhase=LOADOUT, loadoutReady, escalation controller=attacker, grants INITIAL_VOID_SCRAP
+- **INTENT_ROLL guard**: Requires subPhase=ACTIVE
+- **Item catalog & economy constants**: WIN_REWARD=10, LOSS_REWARD=4, ITEM_COST=25, INITIAL_VOID_SCRAP=30, MAX_LOADOUT_SLOTS=2, MAW_EXTRA_SLOT=3
+- **BattleState extensions**: subPhase (LOADOUT|ACTIVE), loadoutReady, disabledModifierNodeId
+- **Removed stubs.ts**: All handlers now implemented
+
+### What Was Built (Phase 5 — carried forward)
+- **Resolution handlers**: ACKNOWLEDGE_RESULT, INTENT_FORFEIT
+- **Result views**: BattleResultView, CampaignResultView
+- **CampaignMapView fix**: player role for ownership
+- **Unit tests**: 25 Vitest tests passing
 
 ### What Was Built (Phase 4 — carried forward)
 - **Rules engine**: boardSetup, validMoves, hasAnyValidMove
@@ -31,18 +38,20 @@
 - **Shared**: All state model interfaces, WebSocket payload schemas, game constants
 
 ### Technical Debt / Notes
-- READY_LOADOUT, INTENT_USE_ITEM, INTENT_INVOKE_ESCALATION, INTENT_RESPOND_ESCALATION handlers are still stubs
-- LOADOUT, ESCALATION_PROMPT views are placeholder UIs
 - Forfeit logic on grace period expiry is a TODO stub (disconnect forfeit)
 - BattleActiveView move builder doesn't validate against server rules engine client-side (relies on server rejection)
 - No integration tests for server handlers
 - CampaignMapView doesn't validate adjacency client-side (relies on server rejection)
+- Item target selection uses prompt() — should be a proper UI selector
+- Angelic Protection not enforced in validMoves (invulnerable points should block enemy moves)
+- Sabotage only usable during ACTIVE sub-phase, should ideally be LOADOUT-only
 - No animations, sound effects, or responsive layout polish yet
+- No Void-Scrap rewards applied at end of battle (win/loss rewards)
 
-### Next Step: Phase 6 — Loadout & Escalation (Tactical Items)
-1. Implement READY_LOADOUT handler: validate item slots, transition BATTLE → BATTLE (loadout complete)
-2. Implement INTENT_USE_ITEM handler: apply tactical item effects
-3. Implement INTENT_INVOKE_ESCALATION / INTENT_RESPOND_ESCALATION handlers
-4. Build LOADOUT view: item selection with Void-Scrap economy
-5. Build ESCALATION_PROMPT view: escalation offer and response UI
-6. Add integration tests for server handlers
+### Next Step: Phase 7 — Polish & Integration Testing
+1. Enforce Angelic Protection in validMoves (block enemy targeting of invulnerable points)
+2. Apply Void-Scrap rewards at battle end (W × multiplier for winner, L for loser)
+3. Replace prompt()-based item targeting with proper UI selectors (click-to-target)
+4. Add integration tests for server handlers (socket.io mock)
+5. Responsive layout polish and UX improvements
+6. Disconnect forfeit on grace period expiry
