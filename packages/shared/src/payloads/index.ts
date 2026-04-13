@@ -176,6 +176,19 @@ export interface CriticalErrorPayload {
 }
 
 // ---------------------------------------------------------
+// SESSION LIFECYCLE (Server → Client, non-broadcast)
+// ---------------------------------------------------------
+
+export interface SessionCreatedPayload {
+  sessionId: string;
+  sectorCode: string;
+}
+
+export interface SessionJoinedPayload {
+  sessionId: string;
+}
+
+// ---------------------------------------------------------
 // BROADCAST TYPE UNION
 // ---------------------------------------------------------
 
