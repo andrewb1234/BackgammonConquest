@@ -232,6 +232,14 @@ export default function BattleActiveView() {
       {lastRejection && (
         <p className="text-red-400 text-sm">Rejected: {lastRejection.reason}</p>
       )}
+
+      {/* Forfeit */}
+      <button
+        onClick={() => sendGameIntent("INTENT_FORFEIT", {})}
+        className="mt-2 px-4 py-1 bg-red-900/40 hover:bg-red-900/60 text-red-400 rounded text-sm transition"
+      >
+        Forfeit Battle
+      </button>
     </div>
   );
 }

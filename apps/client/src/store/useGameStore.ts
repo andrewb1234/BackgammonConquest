@@ -78,6 +78,7 @@ function deriveUIView(gameState: GameState | null, hasSectorCode: boolean): UIVi
       return "BATTLE_ACTIVE";
     }
     case "RESOLUTION":
+      if (gameState.campaignWinner) return "CAMPAIGN_RESULT";
       return "BATTLE_RESULT";
     default:
       return "LOBBY";

@@ -5,6 +5,8 @@ import WaitingView from "./components/WaitingView";
 import FactionSelectView from "./components/FactionSelectView";
 import CampaignMapView from "./components/CampaignMapView";
 import BattleActiveView from "./components/BattleActiveView";
+import BattleResultView from "./components/BattleResultView";
+import CampaignResultView from "./components/CampaignResultView";
 import PeerOverlay from "./components/PeerOverlay";
 
 function App() {
@@ -34,9 +36,9 @@ function App() {
       case "ESCALATION_PROMPT":
         return <PlaceholderView label="Escalation Prompt" />;
       case "BATTLE_RESULT":
-        return <PlaceholderView label="Battle Result" />;
+        return <BattleResultView />;
       case "CAMPAIGN_RESULT":
-        return <PlaceholderView label="Campaign Result" />;
+        return <CampaignResultView />;
       default:
         return <LobbyView />;
     }

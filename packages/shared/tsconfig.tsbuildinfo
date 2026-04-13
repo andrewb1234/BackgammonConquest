@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/constants/index.ts","./src/payloads/index.ts","./src/rules/boardsetup.ts","./src/rules/index.ts","./src/rules/validmoves.ts","./src/state/index.ts"],"version":"5.9.3"}
+{"root":["./src/index.ts","./src/constants/index.ts","./src/payloads/index.ts","./src/rules/boardsetup.ts","./src/rules/index.ts","./src/rules/validmoves.ts","./src/rules/__tests__/boardsetup.test.ts","./src/rules/__tests__/validmoves.test.ts","./src/state/index.ts"],"version":"5.9.3"}

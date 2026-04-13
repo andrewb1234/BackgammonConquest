@@ -5,13 +5,12 @@ import { handleCreateSession, handleJoinSession, handleRejoinSession } from "./h
 import { handleLockFaction } from "./handlers/lobby.js";
 import { handleTargetNode } from "./handlers/campaign.js";
 import { handleIntentRoll, handleIntentMove } from "./handlers/battle.js";
+import { handleAcknowledgeResult, handleIntentForfeit } from "./handlers/resolution.js";
 import {
   handleReadyLoadout,
   handleIntentUseItem,
   handleIntentInvokeEscalation,
   handleIntentRespondEscalation,
-  handleIntentForfeit,
-  handleAcknowledgeResult,
 } from "./handlers/stubs.js";
 
 // ---------------------------------------------------------

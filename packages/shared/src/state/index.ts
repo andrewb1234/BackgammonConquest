@@ -25,6 +25,7 @@ export interface GameState {
   players: [PlayerState, PlayerState];
   campaign: CampaignState;
   battle?: BattleState;
+  campaignWinner?: PlayerRole;
 }
 
 // ---------------------------------------------------------

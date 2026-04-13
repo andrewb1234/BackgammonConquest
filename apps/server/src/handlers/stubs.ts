@@ -7,8 +7,6 @@ import type {
   IntentUseItemPayload,
   IntentInvokeEscalationPayload,
   IntentRespondEscalationPayload,
-  IntentForfeitPayload,
-  AcknowledgeResultPayload,
 } from "@backgammon-conquest/shared";
 import { getSessionByPlayerId } from "../sessionManager.js";
 import { rejectIntent } from "../broadcast.js";
@@ -92,34 +90,4 @@ export function handleIntentRespondEscalation(
   if (checkStaleState(socket, "INTENT_RESPOND_ESCALATION", msg.payload.stateVersion, gameState.stateVersion)) return;
 
   rejectIntent(socket, "INTENT_RESPOND_ESCALATION", "ESCALATION_NOT_ALLOWED", gameState.stateVersion);
-}
-
-export function handleIntentForfeit(
-  _io: SocketServer,
-  socket: Socket,
-  msg: SocketMessage<IntentForfeitPayload>,
-): void {
-  const gameState = getSessionByPlayerId((socket.data as { clientId?: string }).clientId ?? "");
-  if (!gameState) {
-    rejectIntent(socket, "INTENT_FORFEIT", "INVALID_PHASE", 0);
-    return;
-  }
-  if (checkStaleState(socket, "INTENT_FORFEIT", msg.payload.stateVersion, gameState.stateVersion)) return;
-
-  rejectIntent(socket, "INTENT_FORFEIT", "INVALID_PHASE", gameState.stateVersion);
-}
-
-export function handleAcknowledgeResult(
-  _io: SocketServer,
-  socket: Socket,
-  msg: SocketMessage<AcknowledgeResultPayload>,
-): void {
-  const gameState = getSessionByPlayerId((socket.data as { clientId?: string }).clientId ?? "");
-  if (!gameState) {
-    rejectIntent(socket, "ACKNOWLEDGE_RESULT", "INVALID_PHASE", 0);
-    return;
-  }
-  if (checkStaleState(socket, "ACKNOWLEDGE_RESULT", msg.payload.stateVersion, gameState.stateVersion)) return;
-
-  rejectIntent(socket, "ACKNOWLEDGE_RESULT", "INVALID_PHASE", gameState.stateVersion);
 }
