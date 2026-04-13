@@ -1,57 +1,42 @@
 # State of Project
 
-## Last Completed: Phase 6 — Loadout & Escalation (Tactical Items)
+## Last Completed: Phase 7 — Polish & Integration Testing
 
-### What Was Built (Phase 6)
-- **READY_LOADOUT handler** (`loadoutItems.ts`): Validates item count vs max slots (Maw node grants 3), validates Void-Scrap affordability, deducts cost, sets loadout. Both-ready → subPhase LOADOUT → ACTIVE
-- **INTENT_USE_ITEM handler** (`loadoutItems.ts`): AIR_STRIKE (enemy blot → bar), ANGELIC_PROTECTION (invulnerability 2 turns), LUCKY_CHANCE (dice re-roll), SABOTAGE (disable enemy node modifier)
-- **INTENT_INVOKE_ESCALATION handler** (`loadoutItems.ts`): Controller-only, before rolling, sets status=OFFERED
-- **INTENT_RESPOND_ESCALATION handler** (`loadoutItems.ts`): ACCEPT (doubles multiplier, transfers control), RETREAT (invoker wins node, capital capture check)
-- **LoadoutView**: Item catalog with costs/descriptions, Void-Scrap display, slot limits, ready-up with both-player sync
-- **EscalationPromptView**: Current/next multiplier display, accept/retreat buttons for responder, waiting for invoker
-- **BattleActiveView updates**: Escalation invoke button (controller, pre-roll), tactical item buttons (trigger-aware), multiplier display in header
-- **TARGET_NODE updates**: Sets subPhase=LOADOUT, loadoutReady, escalation controller=attacker, grants INITIAL_VOID_SCRAP
-- **INTENT_ROLL guard**: Requires subPhase=ACTIVE
-- **Item catalog & economy constants**: WIN_REWARD=10, LOSS_REWARD=4, ITEM_COST=25, INITIAL_VOID_SCRAP=30, MAX_LOADOUT_SLOTS=2, MAW_EXTRA_SLOT=3
-- **BattleState extensions**: subPhase (LOADOUT|ACTIVE), loadoutReady, disabledModifierNodeId
-- **Removed stubs.ts**: All handlers now implemented
+### What Was Built (Phase 7)
+- **Angelic Protection in validMoves**: `isPointOpen` now checks for `ANGELIC_PROTECTION` active effect — blocks enemy hits on invulnerable blots
+- **Void-Scrap rewards at battle end**: `applyRewards` helper in resolution.ts — winner gets W×multiplier, loser gets L. Applied in both `handleAcknowledgeResult` and `handleIntentForfeit`. Broadcast includes "players" delta
+- **Click-to-target UI**: Replaced `prompt()` calls in BattleActiveView with `targetingItem` state. Click a point on the board to target for AIR_STRIKE/ANGELIC_PROTECTION. Visual highlighting via `isItemTarget` prop on PointComponent. Cancel button to exit targeting mode
+- **Sabotage restricted to LOADOUT**: Server-side `subPhase !== "LOADOUT"` check for SABOTAGE in `handleIntentUseItem`. LoadoutView shows Sabotage use buttons during LOADOUT phase
+- **18 integration tests**: `apps/server/src/handlers/__tests__/loadoutItems.test.ts` — READY_LOADOUT (5), INVOKE_ESCALATION (3), RESPOND_ESCALATION (4), USE_ITEM (6). Uses real session manager with `_resetForTesting()` for isolation
+- **Responsive layout**: max-w-2xl container in App.tsx, p-4 padding, Void-Scrap display in CampaignMapView, BattleActiveView header, and BattleResultView
+- **Unit test for Angelic Protection**: Added 2 test cases in `validMoves.test.ts` (blocks enemy hit on protected blot, allows hit on unprotected blot)
 
-### What Was Built (Phase 5 — carried forward)
-- **Resolution handlers**: ACKNOWLEDGE_RESULT, INTENT_FORFEIT
-- **Result views**: BattleResultView, CampaignResultView
-- **CampaignMapView fix**: player role for ownership
-- **Unit tests**: 25 Vitest tests passing
+### What Was Built (Phase 6 — carried forward)
+- **READY_LOADOUT, INTENT_USE_ITEM, INVOKE_ESCALATION, RESPOND_ESCALATION handlers**
+- **LoadoutView, EscalationPromptView, BattleActiveView updates**
+- **Item catalog & economy constants**
 
-### What Was Built (Phase 4 — carried forward)
+### What Was Built (Phases 1–5 — carried forward)
 - **Rules engine**: boardSetup, validMoves, hasAnyValidMove
-- **Server handlers**: LOCK_FACTION → CAMPAIGN, TARGET_NODE, INTENT_ROLL, INTENT_MOVE
-- **BattleActiveView**: 24-point board, dice, move builder
-
-### What Was Built (Phase 3 — carried forward)
-- **Client**: Socket.io service, Zustand store, LobbyView, WaitingView, FactionSelectView, CampaignMapView, PeerOverlay
-
-### What Was Built (Phase 2 — carried forward)
-- **Server**: Session manager, intent router, broadcast system, session/lobby handlers, disconnect/reconnect
-
-### What Was Built (Phase 1 — carried forward)
+- **Server handlers**: All campaign/battle/resolution handlers implemented
+- **Client**: All views implemented (Lobby, Waiting, FactionSelect, CampaignMap, Loadout, BattleActive, EscalationPrompt, BattleResult, CampaignResult, PeerOverlay)
 - **Monorepo**: npm workspaces with 3 packages
-- **Shared**: All state model interfaces, WebSocket payload schemas, game constants
+
+### Test Status
+- **27 shared tests** (boardSetup: 12, validMoves: 15)
+- **18 server integration tests** (loadoutItems handlers)
+- **Total: 45 tests passing**
 
 ### Technical Debt / Notes
 - Forfeit logic on grace period expiry is a TODO stub (disconnect forfeit)
 - BattleActiveView move builder doesn't validate against server rules engine client-side (relies on server rejection)
-- No integration tests for server handlers
 - CampaignMapView doesn't validate adjacency client-side (relies on server rejection)
-- Item target selection uses prompt() — should be a proper UI selector
-- Angelic Protection not enforced in validMoves (invulnerable points should block enemy moves)
-- Sabotage only usable during ACTIVE sub-phase, should ideally be LOADOUT-only
-- No animations, sound effects, or responsive layout polish yet
-- No Void-Scrap rewards applied at end of battle (win/loss rewards)
+- No animations or sound effects yet
+- No integration tests for campaign/battle/resolution handlers (only loadoutItems covered)
 
-### Next Step: Phase 7 — Polish & Integration Testing
-1. Enforce Angelic Protection in validMoves (block enemy targeting of invulnerable points)
-2. Apply Void-Scrap rewards at battle end (W × multiplier for winner, L for loser)
-3. Replace prompt()-based item targeting with proper UI selectors (click-to-target)
-4. Add integration tests for server handlers (socket.io mock)
-5. Responsive layout polish and UX improvements
-6. Disconnect forfeit on grace period expiry
+### Next Step: Phase 8 — Disconnect Forfeit & Final QA
+1. Implement disconnect forfeit on grace period expiry
+2. Add integration tests for campaign/battle/resolution handlers
+3. Animation polish (dice roll, piece movement, hit effects)
+4. Sound effects
+5. End-to-end smoke test
