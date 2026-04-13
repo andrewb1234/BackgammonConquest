@@ -1,6 +1,16 @@
 import { useGameStore } from "../store/useGameStore";
 import type { NodeOwner, PlayerRole } from "@backgammon-conquest/shared";
 
+const ADJACENCY: Map<number, number[]> = new Map([
+  [0, [1]],
+  [1, [0, 2]],
+  [2, [1, 3]],
+  [3, [2, 4]],
+  [4, [3, 5]],
+  [5, [4, 6]],
+  [6, [5]],
+]);
+
 export default function CampaignMapView() {
   const gameState = useGameStore((s) => s.gameState);
   const clientId = useGameStore((s) => s.clientId);
@@ -12,9 +22,13 @@ export default function CampaignMapView() {
   const myRole = gameState?.players.find((p) => p.playerId === clientId)?.role as PlayerRole | undefined;
   const myScrap = gameState?.players.find((p) => p.playerId === clientId)?.voidScrap ?? 0;
 
-  const canTarget = (node: { owner: NodeOwner }) => {
+  const canTarget = (node: { nodeId: number; owner: NodeOwner }) => {
     if (!isActive || !myRole) return false;
-    return node.owner !== myRole;
+    if (node.owner === myRole) return false;
+    // Must be adjacent to an owned node
+    const ownedNodeIds = nodes.filter((n) => n.owner === myRole).map((n) => n.nodeId);
+    const adjacentToOwned = ownedNodeIds.flatMap((id) => ADJACENCY.get(id) ?? []);
+    return adjacentToOwned.includes(node.nodeId);
   };
 
   return (

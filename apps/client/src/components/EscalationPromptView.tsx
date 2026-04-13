@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import type { PlayerRole } from "@backgammon-conquest/shared";
+import { playEscalation } from "../services/sounds";
 
 export default function EscalationPromptView() {
   const gameState = useGameStore((s) => s.gameState);
@@ -10,6 +12,11 @@ export default function EscalationPromptView() {
   const myRole = gameState?.players.find((p) => p.playerId === clientId)?.role as PlayerRole | undefined;
   const isController = escalation?.controllerPlayerId === clientId;
   const isResponder = !isController;
+
+  // Play escalation alarm on mount
+  useEffect(() => {
+    playEscalation();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentMultiplier = escalation?.multiplier ?? 1;
   const nextMultiplier = currentMultiplier * 2;

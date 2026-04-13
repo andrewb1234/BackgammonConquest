@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import type { BattleState, PlayerRole, Point } from "@backgammon-conquest/shared";
 import type { ValidMove, TacticalItem } from "@backgammon-conquest/shared";
-import { ITEM_CATALOG } from "@backgammon-conquest/shared";
+import { ITEM_CATALOG, getValidMoves } from "@backgammon-conquest/shared";
+import { playDiceRoll, playMove, playItemUse, playEscalation } from "../services/sounds";
 
 export default function BattleActiveView() {
   const gameState = useGameStore((s) => s.gameState);
@@ -26,6 +27,7 @@ export default function BattleActiveView() {
 
   const handleRoll = useCallback(() => {
     setDiceRolling(true);
+    playDiceRoll();
     sendGameIntent("INTENT_ROLL", {});
   }, [sendGameIntent]);
 
@@ -50,31 +52,22 @@ export default function BattleActiveView() {
   }, [isMyTurn, dice, targetingItem, sendGameIntent]);
 
   const handleTargetClick = useCallback((targetIndex: number) => {
-    if (!isMyTurn || !dice || selectedPoint === null) return;
+    if (!isMyTurn || !dice || selectedPoint === null || !myRole) return;
 
-    // Find a valid move for the selected die
-    const availableDice = dice
-      .map((d, i) => ({ die: d, index: i, used: diceUsed[i] }))
-      .filter((d) => !d.used);
+    // Use shared rules engine to find a valid move
+    const moves = getValidMoves(board!, myRole, dice, diceUsed);
+    const matching = moves.find((m) => m.fromPoint === selectedPoint && m.toPoint === targetIndex);
 
-    for (const { die } of availableDice) {
-      const move: ValidMove = {
-        fromPoint: selectedPoint,
-        toPoint: targetIndex,
-        dieUsed: die,
-        isBearingOff: targetIndex === -1 || targetIndex === 24,
-      };
-
-      // Add to pending moves and mark die as conceptually used
-      setPendingMoves((prev) => [...prev, move]);
+    if (matching) {
+      setPendingMoves((prev) => [...prev, matching]);
       setSelectedPoint(null);
-      return;
     }
-  }, [isMyTurn, dice, diceUsed, selectedPoint]);
+  }, [isMyTurn, dice, diceUsed, selectedPoint, myRole, board]);
 
   const handleSubmitMoves = useCallback(() => {
     if (pendingMoves.length === 0) return;
 
+    playMove();
     sendGameIntent("INTENT_MOVE", {
       moves: pendingMoves.map((m) => ({
         fromPoint: m.fromPoint,
@@ -100,23 +93,11 @@ export default function BattleActiveView() {
 
   // Determine which points are valid targets for the selected piece
   const validTargets = new Set<number>();
-  if (selectedPoint !== null && dice) {
-    const availableDice = dice
-      .map((d, i) => ({ die: d, index: i, used: diceUsed[i] }))
-      .filter((d) => !d.used);
-
-    for (const { die: _d } of availableDice) {
-      const dir = myRole === "HOST" ? -1 : 1;
-      if (selectedPoint === "BAR") {
-        const entry = myRole === "HOST" ? (24 - _d) : (_d - 1);
-        if (entry >= 0 && entry < 24) validTargets.add(entry);
-      } else {
-        const dest = selectedPoint + dir * _d;
-        if (dest >= 0 && dest < 24) validTargets.add(dest);
-        // Bearing off targets
-        if (myRole === "HOST" && dest < 0) validTargets.add(-1);
-        if (myRole === "GUEST" && dest > 23) validTargets.add(24);
-      }
+  if (selectedPoint !== null && dice && myRole) {
+    const moves = getValidMoves(board, myRole, dice, diceUsed);
+    const filtered = moves.filter((m) => m.fromPoint === selectedPoint);
+    for (const m of filtered) {
+      validTargets.add(m.toPoint);
     }
   }
 
@@ -277,7 +258,7 @@ export default function BattleActiveView() {
         {isMyTurn && !dice && battle?.escalation.status === "IDLE" &&
           battle.escalation.controllerPlayerId === clientId && (
           <button
-            onClick={() => sendGameIntent("INTENT_INVOKE_ESCALATION", {})}
+            onClick={() => { playEscalation(); sendGameIntent("INTENT_INVOKE_ESCALATION", {}); }}
             className="px-3 py-1 bg-red-800 hover:bg-red-700 text-red-200 rounded text-xs font-bold transition"
           >
             Escalate ({battle.escalation.multiplier * 2}×)
@@ -311,6 +292,7 @@ export default function BattleActiveView() {
               onClick={() => {
                 if (!canUse) return;
                 if (item.itemId === "LUCKY_CHANCE") {
+                  playItemUse();
                   sendGameIntent("INTENT_USE_ITEM", { itemId: item.itemId });
                 } else if (needsTarget) {
                   setTargetingItem(isActive ? null : item.itemId);

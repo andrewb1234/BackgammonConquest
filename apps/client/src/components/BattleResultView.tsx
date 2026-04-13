@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import type { PlayerRole } from "@backgammon-conquest/shared";
+import { playVictory, playDefeat } from "../services/sounds";
 
 export default function BattleResultView() {
   const gameState = useGameStore((s) => s.gameState);
@@ -26,6 +28,13 @@ export default function BattleResultView() {
   const myPlayer = gameState?.players.find((p) => p.playerId === clientId);
   const isVictor = winner === myRole;
   const factionName = winner === "HOST" ? "Iron Hegemony" : winner === "GUEST" ? "Solar Covenant" : "Unknown";
+
+  // Play victory/defeat sound on mount
+  useEffect(() => {
+    if (winner && myRole) {
+      isVictor ? playVictory() : playDefeat();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-col items-center gap-6">
