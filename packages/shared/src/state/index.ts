@@ -20,6 +20,7 @@ export type EscalationResponse = "ACCEPT" | "RETREAT";
 
 export interface GameState {
   sessionId: string;
+  stateVersion: number;
   phase: GamePhase;
   players: [PlayerState, PlayerState];
   campaign: CampaignState;
