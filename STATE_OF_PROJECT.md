@@ -1,38 +1,46 @@
 # State of Project
 
-## Last Completed: Phase 8 — Disconnect Forfeit & Final QA
+## Last Completed: Production Deployment
+
+### What Was Built (This Session)
+- **Sound effects**: Procedural Web Audio API sound system (`apps/client/src/services/sounds.ts`) — dice roll, hit, move, escalation alarm, victory fanfare, defeat tone, item blip. Wired into BattleActiveView, BattleResultView, EscalationPromptView.
+- **Session handler integration tests**: 8 tests for `handleCreateSession`, `handleJoinSession`, `handleRejoinSession` — covers session creation, duplicate rejection, invalid sector code, full session rejection, rejoin with reconnect.
+- **Client-side move validation**: BattleActiveView now uses shared `getValidMoves` rules engine instead of manual calculation. CampaignMapView now validates adjacency before enabling node targeting.
+- **Production deployment**: Both services live on Render:
+  - Server: https://backgammon-conquest-server.onrender.com
+  - Client: https://backgammon-conquest.onrender.com
 
 ### What Was Built (Phase 8)
-- **Disconnect forfeit on grace period expiry**: Extracted `applyForfeit()` from `handleIntentForfeit` into a reusable exported function in `resolution.ts`. Wired into the 45s grace period timeout in `index.ts` — when a disconnected player fails to reconnect, the server automatically applies forfeit logic (node ownership, Void-Scrap rewards, capital capture check, phase transition)
-- **24 integration tests for campaign/battle/resolution handlers**:
-  - `campaign.test.ts`: 6 tests — TARGET_NODE phase checks, active player validation, adjacency enforcement, own-node rejection, valid attack acceptance, Void-Scrap grant
-  - `battle.test.ts`: 7 tests — INTENT_ROLL phase/active player/dice guards, dice roll mechanics, LOADOUT sub-phase rejection, INTENT_MOVE no-dice/active player guards
-  - `resolution.test.ts`: 11 tests — applyForfeit (opponent wins, node ownership, Void-Scrap rewards, escalation multiplier, capital capture), handleIntentForfeit (phase guard, forfeit execution), handleAcknowledgeResult (phase guard, dual-ack flow, reward distribution, capital capture)
-- **Animation polish**: Dice roll bounce animation with `animate-bounce` + `scale-110`, point count `transition-all duration-200`, ANGELIC_PROTECTION shield indicator (🛡 cyan pulse) on protected points, campaign node `hover:scale-110` + `transition-all duration-200`, victory `animate-pulse` + defeat `scale-95` on BattleResultView
-- **Refactored handleIntentForfeit**: Now uses shared `applyForfeit()` function — single source of truth for forfeit logic
+- **Disconnect forfeit on grace period expiry**: `applyForfeit()` extracted as reusable function, wired into 45s grace period timeout.
+- **Campaign/battle/resolution integration tests**: 24 tests across 3 files.
+- **Animation polish**: Dice roll bounce, point count transitions, ANGELIC_PROTECTION shield indicator, campaign node hover scale, victory/defeat animations.
 
-### What Was Built (Phase 7 — carried forward)
-- **Angelic Protection in validMoves**, **Void-Scrap rewards at battle end**, **click-to-target UI**, **Sabotage LOADOUT-only**, **18 loadoutItems integration tests**, **responsive layout**
+### What Was Built (Phase 7)
+- Angelic Protection in validMoves, Void-Scrap rewards, click-to-target UI, Sabotage LOADOUT-only, 18 loadoutItems tests, responsive layout.
 
-### What Was Built (Phases 1–6 — carried forward)
-- **Rules engine**: boardSetup, validMoves, hasAnyValidMove
-- **Server handlers**: All campaign/battle/resolution/loadout/escalation handlers implemented
-- **Client**: All views implemented (Lobby, Waiting, FactionSelect, CampaignMap, Loadout, BattleActive, EscalationPrompt, BattleResult, CampaignResult, PeerOverlay)
-- **Monorepo**: npm workspaces with 3 packages
+### What Was Built (Phases 1–6)
+- Rules engine (boardSetup, validMoves, hasAnyValidMove)
+- All server handlers (campaign, battle, resolution, loadout, escalation, session)
+- All client views (Lobby, Waiting, FactionSelect, CampaignMap, Loadout, BattleActive, EscalationPrompt, BattleResult, CampaignResult, PeerOverlay)
+- Monorepo with npm workspaces
 
 ### Test Status
 - **27 shared tests** (boardSetup: 12, validMoves: 15)
-- **42 server integration tests** (loadoutItems: 18, campaign: 6, battle: 7, resolution: 11)
-- **Total: 69 tests passing**
+- **50 server integration tests** (loadoutItems: 18, campaign: 6, battle: 7, resolution: 11, session: 8)
+- **Total: 77 tests passing**
 
-### Technical Debt / Notes
-- BattleActiveView move builder doesn't validate against server rules engine client-side (relies on server rejection)
-- CampaignMapView doesn't validate adjacency client-side (relies on server rejection)
-- No sound effects yet
-- No integration tests for session/lobby handlers (disconnect, reconnect, identify)
+### Production URLs
+- **Client**: https://backgammon-conquest.onrender.com
+- **Server**: https://backgammon-conquest-server.onrender.com
+- **GitHub**: https://github.com/andrewb1234/BackgammonConquest
+
+### Technical Debt
+- Server `dotenv` path is hardcoded to `../../.env` — won't work in production (Render uses env vars directly, so this is fine)
+- No integration tests for disconnect/reconnect flow (hard to test with setTimeout)
+- No E2E browser tests (Playwright/Cypress)
 
 ### Next Steps
-- Sound effects (dice roll, hit, escalation, victory/defeat)
-- Session/lobby handler integration tests
-- Client-side move validation (optional — server already validates)
-- Production deployment (Vercel + Render)
+- E2E browser tests (Playwright)
+- Disconnect/reconnect integration test with fake timers
+- Lobby UX polish (faction selection animations)
+- Mobile touch optimization
