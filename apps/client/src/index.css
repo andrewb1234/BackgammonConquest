@@ -1,3 +1,114 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  /* CRT scanlines overlay — subtle repeating horizontal lines */
+  .crt-scanlines {
+    position: relative;
+  }
+  .crt-scanlines::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.18) 0px,
+      rgba(0, 0, 0, 0.18) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    mix-blend-mode: multiply;
+    border-radius: inherit;
+  }
+
+  /* Faint phosphor glow for holographic text */
+  .crt-glow {
+    text-shadow:
+      0 0 2px currentColor,
+      0 0 6px rgba(251, 191, 36, 0.35);
+  }
+  .crt-glow-green {
+    text-shadow:
+      0 0 2px currentColor,
+      0 0 6px rgba(74, 222, 128, 0.35);
+  }
+
+  /* Metallic bronze frame */
+  .metal-frame {
+    background:
+      linear-gradient(145deg, #3b2a1a, #1a120a),
+      repeating-linear-gradient(
+        45deg,
+        rgba(180, 140, 80, 0.03) 0 2px,
+        transparent 2px 4px
+      );
+    background-blend-mode: overlay;
+    border-color: #6b4a2b;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 200, 120, 0.08),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+      0 0 18px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Holographic grid background — dark green terminal vibe */
+  .holo-surface {
+    background:
+      radial-gradient(
+        ellipse at center,
+        rgba(52, 78, 65, 0.55) 0%,
+        rgba(12, 20, 18, 0.95) 80%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(74, 222, 128, 0.04) 0 1px,
+        transparent 1px 18px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        rgba(74, 222, 128, 0.04) 0 1px,
+        transparent 1px 18px
+      );
+  }
+
+  /* Iron Hegemony legion disc (rust-red gear) */
+  .legion-host {
+    background:
+      radial-gradient(circle at 35% 35%, #c9463a 0%, #7a1f18 55%, #3a0c08 100%);
+    border: 1px solid #2a0604;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 150, 120, 0.35),
+      inset 0 0 0 2px rgba(0, 0, 0, 0.3),
+      0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Solar Covenant legion disc (gold/marble with blue aura) */
+  .legion-guest {
+    background:
+      radial-gradient(circle at 35% 30%, #fff7d6 0%, #e4c26a 50%, #8a6620 100%);
+    border: 1px solid #5a3f10;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 220, 0.6),
+      inset 0 0 0 2px rgba(0, 0, 0, 0.2),
+      0 0 8px rgba(96, 165, 250, 0.6),
+      0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Light and dark trench triangles */
+  .trench-light {
+    background: linear-gradient(180deg, rgba(180, 110, 50, 0.35), rgba(80, 40, 20, 0.1));
+  }
+  .trench-dark {
+    background: linear-gradient(180deg, rgba(60, 50, 40, 0.5), rgba(20, 16, 12, 0.2));
+  }
+
+  /* Selection ring pulse */
+  @keyframes crt-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.7), 0 0 10px rgba(74, 222, 128, 0.5); }
+    50% { box-shadow: 0 0 0 2px rgba(74, 222, 128, 1), 0 0 16px rgba(74, 222, 128, 0.9); }
+  }
+  .crt-pulse {
+    animation: crt-pulse 1.4s ease-in-out infinite;
+  }
+}
