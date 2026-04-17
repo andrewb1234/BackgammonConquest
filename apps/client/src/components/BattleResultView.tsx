@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import type { PlayerRole } from "@backgammon-conquest/shared";
+import { getPlanet } from "@backgammon-conquest/shared";
 import { playVictory, playDefeat } from "../services/sounds";
 
 export default function BattleResultView() {
@@ -45,7 +46,7 @@ export default function BattleResultView() {
           {isVictor ? "Victory" : "Defeat"}
         </p>
         <p className="text-gray-400">
-          {winner ? `${factionName} has claimed Node ${contestedNodeId + 1}` : "Battle concluded"}
+          {winner ? `${factionName} has claimed ${getPlanet(contestedNodeId)?.name ?? `Node ${contestedNodeId + 1}`}` : "Battle concluded"}
         </p>
       </div>
 

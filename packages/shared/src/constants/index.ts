@@ -1,3 +1,5 @@
+export * from "./planets.js";
+
 export const PIECES_PER_PLAYER = 15;
 export const CAMPAIGN_NODE_COUNT = 7;
 export const BOARD_POINT_COUNT = 24;

@@ -4,6 +4,7 @@ import {
   ITEM_CATALOG,
   MAX_LOADOUT_SLOTS,
   MAW_EXTRA_SLOT,
+  getPlanet,
   type ItemId,
 } from "@backgammon-conquest/shared";
 import type { PlayerRole } from "@backgammon-conquest/shared";
@@ -19,7 +20,7 @@ export default function LoadoutView() {
   const isReady = gameState?.battle?.loadoutReady[myRole!] ?? false;
   const opponentReady = gameState?.battle?.loadoutReady[myRole === "HOST" ? "GUEST" : "HOST"] ?? false;
 
-  // The Maw (node 4) grants extra slots
+  // The Maw (Node 5 in UI, index 4 in code) grants extra slots
   const mawNode = gameState?.campaign?.nodes[4];
   const maxSlots = mawNode?.owner === myRole ? MAW_EXTRA_SLOT : MAX_LOADOUT_SLOTS;
 
@@ -115,15 +116,19 @@ export default function LoadoutView() {
             {gameState?.campaign.nodes
               .map((n, idx) => ({ ...n, idx }))
               .filter((n) => n.owner !== null && n.owner !== myRole && n.owner !== "NEUTRAL")
-              .map((n) => (
-                <button
-                  key={n.idx}
-                  onClick={() => sendGameIntent("INTENT_USE_ITEM", { itemId: "SABOTAGE", targetId: n.idx })}
-                  className="px-3 py-1 bg-red-800 hover:bg-red-700 text-red-200 rounded text-xs transition"
-                >
-                  Sabotage Node {n.idx}
-                </button>
-              ))}
+              .map((n) => {
+                const planet = getPlanet(n.idx);
+                const label = planet ? `${planet.icon} ${planet.name}` : `Node ${n.idx + 1}`;
+                return (
+                  <button
+                    key={n.idx}
+                    onClick={() => sendGameIntent("INTENT_USE_ITEM", { itemId: "SABOTAGE", targetId: n.idx })}
+                    className="px-3 py-1 bg-red-800 hover:bg-red-700 text-red-200 rounded text-xs transition"
+                  >
+                    Sabotage {label}
+                  </button>
+                );
+              })}
           </div>
         </div>
       )}

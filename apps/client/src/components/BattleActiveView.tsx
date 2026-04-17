@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
-import type { BattleState, PlayerRole, Point } from "@backgammon-conquest/shared";
+import type { BattleState, PlayerRole } from "@backgammon-conquest/shared";
 import type { ValidMove, TacticalItem } from "@backgammon-conquest/shared";
-import { ITEM_CATALOG, getValidMoves } from "@backgammon-conquest/shared";
+import { ITEM_CATALOG, getValidMoves, getPlanet } from "@backgammon-conquest/shared";
 import { playDiceRoll, playMove, playItemUse, playEscalation } from "../services/sounds";
+import TacticalBoard from "./TacticalBoard";
 
 export default function BattleActiveView() {
   const gameState = useGameStore((s) => s.gameState);
@@ -87,10 +88,6 @@ export default function BattleActiveView() {
     return <div className="text-gray-500">Waiting for battle data...</div>;
   }
 
-  const points = board.points;
-  const bars = board.bars;
-  const borneOff = board.borneOff;
-
   // Determine which points are valid targets for the selected piece
   const validTargets = new Set<number>();
   if (selectedPoint !== null && dice && myRole) {
@@ -101,24 +98,49 @@ export default function BattleActiveView() {
     }
   }
 
+  // Resolve contested planet + sabotage state for header
+  const contestedPlanet = getPlanet(battle.contestedNodeId);
+  const planetName = contestedPlanet?.name ?? `Node ${battle.contestedNodeId + 1}`;
+  const planetIcon = contestedPlanet?.icon ?? "⬢";
+  const planetEffect = contestedPlanet?.effect ?? "";
+  const isSabotaged = battle.disabledModifierNodeId === battle.contestedNodeId;
+
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
       {/* Header */}
-      <div className="flex items-center justify-between w-full px-4">
-        <h2 className="text-xl font-bold text-amber-400">Planetary Battle</h2>
-        <div className="flex items-center gap-3">
-          {battle.escalation.multiplier > 1 && (
-            <span className="text-sm font-bold text-red-400">
-              {battle.escalation.multiplier}× Stakes
+      <div className="flex flex-col items-center gap-1 w-full px-4">
+        <div className="flex items-center justify-between w-full">
+          <h2 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+            <span className="text-2xl">{planetIcon}</span>
+            {planetName}
+          </h2>
+          <div className="flex items-center gap-3">
+            {battle.escalation.multiplier > 1 && (
+              <span className="text-sm font-bold text-red-400">
+                {battle.escalation.multiplier}× Stakes
+              </span>
+            )}
+            <span className="text-sm text-gray-400">
+              Turn {battle.turnCount} — {isMyTurn ? "Your turn" : "Opponent's turn"}
             </span>
-          )}
-          <span className="text-sm text-gray-400">
-            Turn {battle.turnCount} — {isMyTurn ? "Your turn" : "Opponent's turn"}
-          </span>
-          <span className="text-xs text-amber-300">
-            Scrap: {myPlayer?.voidScrap ?? 0}
-          </span>
+            <span className="text-xs text-amber-300">
+              Scrap: {myPlayer?.voidScrap ?? 0}
+            </span>
+          </div>
         </div>
+        {planetEffect && (
+          <div
+            className={`px-3 py-1 rounded-full text-xs border ${
+              isSabotaged
+                ? "border-red-800 bg-red-950/40 text-red-400 line-through opacity-70"
+                : "border-amber-800/60 bg-amber-950/30 text-amber-300"
+            }`}
+            title={isSabotaged ? "Modifier sabotaged for this match" : "Active planetary modifier"}
+          >
+            {isSabotaged && <span className="mr-1 no-underline">⚠ SABOTAGED:</span>}
+            {planetEffect}
+          </div>
+        )}
       </div>
 
       {/* Dice */}
@@ -147,84 +169,18 @@ export default function BattleActiveView() {
         )}
       </div>
 
-      {/* Opponent borne off */}
-      <div className="text-xs text-gray-500">
-        Opponent Orbital Evacuation: {borneOff[myRole === "HOST" ? "GUEST" : "HOST"]}/15
-      </div>
-
-      {/* Board */}
-      <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 w-full">
-        {/* Top row: points 12-23 (GUEST home side) */}
-        <div className="flex justify-between mb-1">
-          {Array.from({ length: 12 }, (_, i) => i + 12).map((idx) => (
-            <PointComponent
-              key={idx}
-              point={points[idx]}
-              index={idx}
-              isTop
-              isSelected={selectedPoint === idx}
-              isValidTarget={validTargets.has(idx)}
-              isMyPiece={points[idx].owner === myRole}
-              canSelect={isMyTurn && !!dice && points[idx].owner === myRole}
-              isItemTarget={!!targetingItem && points[idx].count > 0 && (
-                (targetingItem === "AIR_STRIKE" && points[idx].owner !== myRole && points[idx].owner !== null && points[idx].count === 1) ||
-                (targetingItem === "ANGELIC_PROTECTION" && points[idx].owner === myRole)
-              )}
-              onClick={() => handlePointClick(idx)}
-              onTargetClick={() => handleTargetClick(idx)}
-            />
-          ))}
-        </div>
-
-        {/* Bar */}
-        <div className="flex justify-center gap-8 py-2 border-y border-gray-700 my-1">
-          <div
-            className={`px-3 py-1 rounded text-sm cursor-pointer transition
-              ${bars.HOST > 0 && myRole === "HOST" && isMyTurn && !!dice ? "bg-red-900/40 text-red-400 hover:bg-red-900/60" : "bg-gray-900 text-gray-500"}
-              ${selectedPoint === "BAR" && myRole === "HOST" ? "ring-2 ring-amber-400" : ""}
-            `}
-            onClick={() => myRole === "HOST" && bars.HOST > 0 && handlePointClick("BAR")}
-          >
-            Void-Buffer (HOST): {bars.HOST}
-          </div>
-          <div
-            className={`px-3 py-1 rounded text-sm cursor-pointer transition
-              ${bars.GUEST > 0 && myRole === "GUEST" && isMyTurn && !!dice ? "bg-yellow-900/40 text-yellow-400 hover:bg-yellow-900/60" : "bg-gray-900 text-gray-500"}
-              ${selectedPoint === "BAR" && myRole === "GUEST" ? "ring-2 ring-amber-400" : ""}
-            `}
-            onClick={() => myRole === "GUEST" && bars.GUEST > 0 && handlePointClick("BAR")}
-          >
-            Void-Buffer (GUEST): {bars.GUEST}
-          </div>
-        </div>
-
-        {/* Bottom row: points 0-11 (HOST home side) */}
-        <div className="flex justify-between mt-1">
-          {Array.from({ length: 12 }, (_, i) => 11 - i).map((idx) => (
-            <PointComponent
-              key={idx}
-              point={points[idx]}
-              index={idx}
-              isTop={false}
-              isSelected={selectedPoint === idx}
-              isValidTarget={validTargets.has(idx)}
-              isMyPiece={points[idx].owner === myRole}
-              canSelect={isMyTurn && !!dice && points[idx].owner === myRole}
-              isItemTarget={!!targetingItem && points[idx].count > 0 && (
-                (targetingItem === "AIR_STRIKE" && points[idx].owner !== myRole && points[idx].owner !== null && points[idx].count === 1) ||
-                (targetingItem === "ANGELIC_PROTECTION" && points[idx].owner === myRole)
-              )}
-              onClick={() => handlePointClick(idx)}
-              onTargetClick={() => handleTargetClick(idx)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* My borne off */}
-      <div className="text-xs text-gray-400">
-        Your Orbital Evacuation: {borneOff[myRole ?? "HOST"]}/15
-      </div>
+      {/* Holographic Tactical Board */}
+      <TacticalBoard
+        board={board}
+        myRole={myRole}
+        isMyTurn={isMyTurn}
+        dice={dice}
+        selectedPoint={selectedPoint}
+        validTargets={validTargets}
+        targetingItem={targetingItem}
+        onPointClick={handlePointClick}
+        onTargetClick={handleTargetClick}
+      />
 
       {/* Pending moves + submit */}
       {pendingMoves.length > 0 && (
@@ -318,66 +274,6 @@ export default function BattleActiveView() {
         >
           Forfeit
         </button>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------
-// POINT COMPONENT
-// ---------------------------------------------------------
-
-function PointComponent({
-  point,
-  index,
-  isTop,
-  isSelected,
-  isValidTarget,
-  isMyPiece,
-  canSelect,
-  isItemTarget,
-  onClick,
-  onTargetClick,
-}: {
-  point: Point;
-  index: number;
-  isTop: boolean;
-  isSelected: boolean;
-  isValidTarget: boolean;
-  isMyPiece: boolean;
-  canSelect: boolean;
-  isItemTarget?: boolean;
-  onClick: () => void;
-  onTargetClick: () => void;
-}) {
-  const hasPieces = point.count > 0;
-  const ownerColor = point.owner === "HOST" ? "text-red-400" : "text-yellow-400";
-  const bgColor = isMyPiece
-    ? (point.owner === "HOST" ? "bg-red-900/30" : "bg-yellow-900/30")
-    : (point.owner === "HOST" ? "bg-red-900/20" : point.owner === "GUEST" ? "bg-yellow-900/20" : "bg-gray-800");
-
-  const triangle = isTop ? "border-b-[12px] border-l-[8px] border-r-[8px] border-b-gray-700 border-l-transparent border-r-transparent" : "border-t-[12px] border-l-[8px] border-r-[8px] border-t-gray-700 border-l-transparent border-r-transparent";
-
-  return (
-    <div
-      className={`flex flex-col items-center w-[30px] cursor-pointer transition
-        ${isSelected ? "ring-2 ring-amber-400 rounded" : ""}
-        ${isValidTarget ? "ring-2 ring-green-500 rounded" : ""}
-        ${isItemTarget ? "ring-2 ring-amber-500 rounded bg-amber-900/30" : ""}
-      `}
-      onClick={isItemTarget ? onClick : isValidTarget ? onTargetClick : canSelect ? onClick : undefined}
-    >
-      <div className={`${triangle} w-0 h-0`} />
-      <div className={`flex flex-col items-center ${bgColor} rounded-sm min-h-[24px] w-full`}>
-        {hasPieces && (
-          <span className={`text-[10px] font-bold ${ownerColor} transition-all duration-200`}>
-            {point.count}
-          </span>
-        )}
-        <span className="text-[8px] text-gray-600">{index}</span>
-        {point.activeEffects?.length > 0 && (
-          <span className="text-[7px] text-cyan-400 animate-pulse">🛡</span>
-        )}
       </div>
     </div>
   );
