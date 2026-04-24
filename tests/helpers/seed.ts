@@ -52,6 +52,26 @@ export async function resetSessions(): Promise<void> {
   }
 }
 
+/**
+ * Queue a deterministic sequence of dice values for subsequent INTENT_ROLL
+ * calls. The server consumes two values per roll (die1, die2). Pass `null`
+ * (or omit) to clear the seed and fall back to Math.random().
+ *
+ * Example: seedDice([3, 5, 6, 6]) → first roll yields [3, 5], next roll
+ * yields [6, 6, 6, 6] (doubles).
+ */
+export async function seedDice(dice: number[] | null): Promise<void> {
+  const resp = await fetch(`${SERVER_URL}/__test__/dice-seed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dice }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`seedDice failed: ${resp.status} ${resp.statusText} — ${text}`);
+  }
+}
+
 // ---------------------------------------------------------------------
 // BOARD SCENARIO BUILDERS
 // ---------------------------------------------------------------------

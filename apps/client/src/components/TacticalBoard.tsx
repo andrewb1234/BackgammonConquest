@@ -116,16 +116,14 @@ export default function TacticalBoard({
         {/* TOP ROW: points 12-23 */}
         <div className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto_repeat(6,minmax(0,1fr))] gap-0 items-stretch">
           {renderTriangleRow(topLeft, true)}
-          {bars.GUEST > 0 && (
-            <BarColumn
-              shownRole="GUEST"
-              count={bars.GUEST}
-              isTop
-              canSelect={canSelectBar("GUEST")}
-              selected={selectedPoint === "BAR" && myRole === "GUEST"}
-              onClick={() => canSelectBar("GUEST") && onPointClick("BAR")}
-            />
-          )}
+          <BarColumn
+            shownRole="GUEST"
+            count={bars.GUEST}
+            isTop
+            canSelect={canSelectBar("GUEST")}
+            selected={selectedPoint === "BAR" && myRole === "GUEST"}
+            onClick={() => canSelectBar("GUEST") && onPointClick("BAR")}
+          />
           {renderTriangleRow(topRight, true)}
         </div>
 
@@ -135,16 +133,14 @@ export default function TacticalBoard({
         {/* BOTTOM ROW: points 0-11 */}
         <div className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto_repeat(6,minmax(0,1fr))] gap-0 items-stretch">
           {renderTriangleRow(bottomLeft, false)}
-          {bars.HOST > 0 && (
-            <BarColumn
-              shownRole="HOST"
-              count={bars.HOST}
-              isTop={false}
-              canSelect={canSelectBar("HOST")}
-              selected={selectedPoint === "BAR" && myRole === "HOST"}
-              onClick={() => canSelectBar("HOST") && onPointClick("BAR")}
-            />
-          )}
+          <BarColumn
+            shownRole="HOST"
+            count={bars.HOST}
+            isTop={false}
+            canSelect={canSelectBar("HOST")}
+            selected={selectedPoint === "BAR" && myRole === "HOST"}
+            onClick={() => canSelectBar("HOST") && onPointClick("BAR")}
+          />
           {renderTriangleRow(bottomRight, false)}
         </div>
 
@@ -259,6 +255,22 @@ function BarColumn({
   const testId = isHost ? "void-buffer-host" : "void-buffer-guest";
   const plate = isHost ? "rust-plate" : "brass-plate";
   const legionClass = isHost ? "legion-host" : "legion-guest";
+
+  // When empty, render a zero-width stub that preserves the semantic DOM
+  // contract (data-testid / data-count / data-owner / data-selectable) for
+  // Playwright while hiding the visual plate chassis.
+  if (count === 0) {
+    return (
+      <div
+        data-testid={testId}
+        data-owner={shownRole}
+        data-count={0}
+        data-selectable={String(canSelect)}
+        aria-hidden="true"
+        className="w-0 h-0 overflow-hidden"
+      />
+    );
+  }
 
   // Show up to 4 stacked mini-legions, then a sharp chevron `+N` badge.
   const visibleStack = Math.min(count, 4);
@@ -461,8 +473,10 @@ function TriangularPoint({
                 strokeWidth="2"
                 strokeLinecap="square"
                 strokeLinejoin="miter"
-                title="Angelic Protection active"
+                role="img"
+                aria-label="Angelic Protection active"
               >
+                <title>Angelic Protection active</title>
                 <path d="M12 2L4 6v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V6l-8-4z" />
                 <path d="M12 6v8" />
                 <path d="M9 10h6" />

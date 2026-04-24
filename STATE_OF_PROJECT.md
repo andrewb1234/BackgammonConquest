@@ -1,6 +1,35 @@
 # State of Project
 
-## Last Completed: Playwright Testing Infrastructure
+## Last Completed: Visual Beautification Pass Tickets
+
+### What Was Built (This Session)
+- **Ticket #17**: Hide empty void-buffer plates when count=0 — BarColumn now conditionally renders only when bars.HOST or bars.GUEST > 0, cleaning up the board when no legions are in the void-buffer.
+- **Ticket #18**: Pipe targetingItem into TriangularPoint instead of owner-proxy heuristic — Added targetingItem prop to TriangularPoint and updated itemOutlineClass logic to use the actual targetingItem value (ANGELIC_PROTECTION vs AIR_STRIKE) instead of inferring from point owner.
+- **Ticket #19**: Audit page background + body frame — Added industrial bay frame to outer App.tsx container with chrome-plate, chamfer-panel, noise-overlay, and holo-surface classes to create a sealed industrial aesthetic.
+- **Ticket #20**: Add data-testid to tactical-item and escalation buttons — Added data-testid attributes (btn-escalate, btn-item-{itemId}) with additional state attributes (data-multiplier, data-item-id, data-can-use, data-is-active) to enable deterministic Playwright POM access.
+- **Ticket #21**: Seed deterministic dice-roll hook for INTENT_ROLL testing — Added _setTestDiceSeed and _getTestDiceSeed functions in sessionManager.ts, modified battle.ts handleIntentRoll to consume seeded dice when available, enabling deterministic ROLL → MOVE → TURN flow testing.
+- **Ticket #22**: Replace shield glyph with geometric SVG — Replaced the ▲▲ text glyph with a geometric SVG shield icon in TriangularPoint, using square line caps and miters to match the industrial Bauhaus aesthetic.
+
+### Test Status
+- **27 shared tests** (boardSetup: 12, validMoves: 15)
+- **50 server integration tests** (loadoutItems: 18, campaign: 6, battle: 7, resolution: 11, session: 8)
+- **3 Playwright e2e tests** (bearing-off, selectable gating, hit)
+- **Total: 80 tests passing**
+
+### Technical Debt
+- Server `dotenv` path is hardcoded to `../../.env` — OK on Render (uses env vars directly).
+- No integration tests for disconnect/reconnect flow (hard to test with setTimeout).
+- Playwright tests only cover HOST-perspective flows. A two-browser context spec would exercise the real-time socket broadcast end-to-end.
+- Dice are now deterministic via test hook, but the hook is not exposed via HTTP endpoint yet — requires direct sessionManager import for test setup.
+
+### Deployment (previous session)
+- **Client**: https://backgammon-conquest.onrender.com
+- **Server**: https://backgammon-conquest-server.onrender.com
+- **GitHub**: https://github.com/andrewb1234/BackgammonConquest
+
+---
+
+## Previous Session: Playwright Testing Infrastructure
 
 ### What Was Built (This Session)
 - **Phase 1 — DOM Semantic Instrumentation**: `TacticalBoard.tsx` and `BattleActiveView.tsx` now expose `data-testid` + state-bearing attributes (`data-owner`, `data-count`, `data-selectable`, `data-targetable`, `data-active-role`, `data-state-version`, `data-dice`, etc.) so Playwright never relies on coordinates or CSS.
