@@ -12,7 +12,7 @@ import {
   isWin,
   hasAnyValidMove,
 } from "@backgammon-conquest/shared";
-import { getSessionByPlayerId } from "../sessionManager.js";
+import { getSessionByPlayerId, _getTestDiceSeed } from "../sessionManager.js";
 import { broadcastStateUpdate, rejectIntent } from "../broadcast.js";
 
 function getPlayerRole(gameState: any, playerId: string): PlayerRole | null {
@@ -63,9 +63,23 @@ export function handleIntentRoll(
     return;
   }
 
-  // Server-authoritative dice roll
-  const die1 = Math.floor(Math.random() * 6) + 1;
-  const die2 = Math.floor(Math.random() * 6) + 1;
+  // Server-authoritative dice roll (with test hook for deterministic seeding)
+  const testSeed = _getTestDiceSeed();
+  let die1: number;
+  let die2: number;
+
+  if (testSeed && testSeed.length >= 2) {
+    // Use seeded dice for deterministic testing
+    die1 = testSeed[0];
+    die2 = testSeed[1];
+    // Consume the seed so subsequent rolls don't repeat
+    testSeed.splice(0, 2);
+  } else {
+    // Normal random roll
+    die1 = Math.floor(Math.random() * 6) + 1;
+    die2 = Math.floor(Math.random() * 6) + 1;
+  }
+
   const isDoubles = die1 === die2;
 
   const dice = isDoubles

@@ -187,10 +187,22 @@ export function removePlayerFromIndex(playerId: string): void {
 // TEST HELPERS
 // ---------------------------------------------------------
 
+// Test hook: deterministic dice seed
+let testDiceSeed: number[] | null = null;
+
+export function _setTestDiceSeed(seed: number[] | null): void {
+  testDiceSeed = seed;
+}
+
+export function _getTestDiceSeed(): number[] | null {
+  return testDiceSeed;
+}
+
 export function _resetForTesting(): void {
   sessions.clear();
   sectorCodeIndex.clear();
   playerSessionIndex.clear();
+  testDiceSeed = null;
 }
 
 // ---------------------------------------------------------
