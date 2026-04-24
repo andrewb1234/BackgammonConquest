@@ -243,6 +243,8 @@ export default function BattleActiveView() {
           battle.escalation.controllerPlayerId === clientId && (
           <button
             onClick={() => { playEscalation(); sendGameIntent("INTENT_INVOKE_ESCALATION", {}); }}
+            data-testid="btn-escalate"
+            data-multiplier={battle.escalation.multiplier * 2}
             className="chamfer-panel rust-plate noise-overlay px-3 py-1 text-[11px] font-mono font-bold tracking-widest uppercase text-red-100 crt-glow hover:brightness-125 transition"
           >
             ▲▲ Escalate · {battle.escalation.multiplier * 2}×
@@ -283,6 +285,10 @@ export default function BattleActiveView() {
                 }
               }}
               disabled={!canUse}
+              data-testid={`btn-item-${item.itemId.toLowerCase()}`}
+              data-item-id={item.itemId}
+              data-can-use={String(canUse)}
+              data-is-active={String(isActive)}
               className={`chamfer-panel noise-overlay px-3 py-1 text-[11px] font-mono font-bold tracking-widest uppercase transition ${
                 isActive
                   ? "brass-plate text-amber-50 ring-2 ring-amber-300 crt-glow"
