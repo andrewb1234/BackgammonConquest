@@ -95,24 +95,21 @@ export default function TacticalBoard({
 
   return (
     <div
-      className="metal-frame crt-scanlines border-2 rounded-lg p-2 sm:p-3 w-full"
+      className="metal-frame crt-scanlines noise-overlay border-2 p-2 sm:p-3 w-full chamfer-panel"
       data-testid="tactical-board"
       data-my-role={myRole ?? ""}
       data-is-my-turn={String(isMyTurn)}
       data-dice={dice ? dice.join(",") : ""}
     >
-      <div className="holo-surface rounded border border-amber-900/40 p-1 sm:p-2">
-        {/* GUEST bearing-off indicator (top row) */}
-        <div className="flex justify-end text-[9px] sm:text-[10px] font-mono text-amber-400/70 crt-glow px-1 mb-1 uppercase tracking-widest">
-          <span
-            data-testid="orbital-evac-guest"
-            data-count={borneOff.GUEST}
-            data-targetable={String(guestCanBearOff)}
-            onClick={guestCanBearOff ? () => onTargetClick(24) : undefined}
-            className={`${guestCanBearOff ? "cursor-pointer ring-2 ring-green-400 rounded px-1" : ""}`}
-          >
-            Orbital Evac (GUEST) {borneOff.GUEST}/15
-          </span>
+      <div className="holo-surface border border-amber-900/40 p-1 sm:p-2">
+        {/* GUEST Orbital Evac gauge (top row) */}
+        <div className="flex justify-end px-1 mb-1">
+          <OrbitalEvacPanel
+            role="GUEST"
+            count={borneOff.GUEST}
+            canBearOff={guestCanBearOff}
+            onClick={() => onTargetClick(24)}
+          />
         </div>
 
         {/* TOP ROW: points 12-23 */}
@@ -146,19 +143,90 @@ export default function TacticalBoard({
           {renderTriangleRow(bottomRight, false)}
         </div>
 
-        {/* HOST bearing-off indicator */}
-        <div className="flex justify-start text-[9px] sm:text-[10px] font-mono text-red-400/70 crt-glow px-1 mt-1 uppercase tracking-widest">
-          <span
-            data-testid="orbital-evac-host"
-            data-count={borneOff.HOST}
-            data-targetable={String(hostCanBearOff)}
-            onClick={hostCanBearOff ? () => onTargetClick(-1) : undefined}
-            className={`${hostCanBearOff ? "cursor-pointer ring-2 ring-green-400 rounded px-1" : ""}`}
-          >
-            Orbital Evac (HOST) {borneOff.HOST}/15
-          </span>
+        {/* HOST Orbital Evac gauge (bottom row) */}
+        <div className="flex justify-start px-1 mt-1">
+          <OrbitalEvacPanel
+            role="HOST"
+            count={borneOff.HOST}
+            canBearOff={hostCanBearOff}
+            onClick={() => onTargetClick(-1)}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------
+// ORBITAL EVAC PANEL — segmented industrial progress gauge
+// ---------------------------------------------------------
+
+function OrbitalEvacPanel({
+  role,
+  count,
+  canBearOff,
+  onClick,
+}: {
+  role: PlayerRole;
+  count: number;
+  canBearOff: boolean;
+  onClick: () => void;
+}) {
+  const testId = role === "HOST" ? "orbital-evac-host" : "orbital-evac-guest";
+  const plate = role === "HOST" ? "rust-plate" : "brass-plate";
+  const activeSeg =
+    role === "HOST" ? "gauge-segment-active-host" : "gauge-segment-active-guest";
+  const textAccent = role === "HOST" ? "text-red-200" : "text-amber-100";
+
+  // 15 segments, one per legion borne off.
+  const segments = Array.from({ length: 15 }, (_, i) => i < count);
+
+  return (
+    <div
+      data-testid={testId}
+      data-count={count}
+      data-targetable={String(canBearOff)}
+      onClick={canBearOff ? onClick : undefined}
+      className={`
+        ${plate} chamfer-panel noise-overlay
+        flex items-center gap-2 px-2 py-1
+        ${canBearOff ? "cursor-pointer ring-2 ring-emerald-400/90" : ""}
+      `}
+      title={`${role} Orbital Evacuation · ${count}/15`}
+    >
+      <span
+        className={`
+          text-[9px] sm:text-[10px] font-mono font-bold tracking-widest uppercase
+          ${textAccent} crt-glow whitespace-nowrap
+        `}
+      >
+        EVAC · {role}
+      </span>
+      <div className="flex items-center gap-[2px]">
+        {segments.map((active, i) => (
+          <span
+            key={i}
+            className={`
+              inline-block w-[5px] h-3 sm:w-[6px] sm:h-4
+              ${active ? activeSeg : "gauge-segment-empty"}
+            `}
+          />
+        ))}
+      </div>
+      <span
+        className={`
+          text-[9px] sm:text-[10px] font-mono font-bold tracking-widest
+          ${textAccent} crt-glow whitespace-nowrap
+        `}
+      >
+        {String(count).padStart(2, "0")}/15
+      </span>
+      {canBearOff && (
+        <span
+          className="led-dot bg-emerald-400 text-emerald-400"
+          aria-label="bear-off target available"
+        />
+      )}
     </div>
   );
 }
@@ -184,6 +252,12 @@ function BarColumn({
 }) {
   const isHost = shownRole === "HOST";
   const testId = isHost ? "void-buffer-host" : "void-buffer-guest";
+  const plate = isHost ? "rust-plate" : "brass-plate";
+  const legionClass = isHost ? "legion-host" : "legion-guest";
+
+  // Show up to 4 stacked mini-legions, then a sharp chevron `+N` badge.
+  const visibleStack = Math.min(count, 4);
+  const overflow = count - visibleStack;
 
   return (
     <div
@@ -193,27 +267,47 @@ function BarColumn({
       data-count={count}
       data-selectable={String(canSelect)}
       className={`
-        flex flex-col items-center justify-center
-        min-w-[20px] sm:min-w-[28px] px-1
-        border-x border-amber-900/50
-        ${canSelect ? "cursor-pointer" : ""}
-        ${selected ? "crt-pulse rounded" : ""}
+        relative flex flex-col items-center justify-center
+        min-w-[22px] sm:min-w-[32px] mx-0.5 my-1 px-1 py-1.5
+        ${plate} chamfer-panel noise-overlay
+        ${canSelect ? "cursor-pointer ring-1 ring-emerald-400/60" : ""}
+        ${selected ? "crt-pulse" : ""}
       `}
-      title="Void-Buffer (Bar)"
+      title={`Void-Buffer (${shownRole})`}
     >
-      {count > 0 && (
-        <div
-          className={`
-            w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center
-            text-[9px] sm:text-[10px] font-bold
-            ${isHost ? "legion-host text-red-100" : "legion-guest text-amber-950"}
-          `}
-        >
-          {count}
-        </div>
-      )}
-      <div className="text-[7px] sm:text-[8px] font-mono text-amber-600/60 tracking-widest uppercase mt-1">
-        {isTop ? "▲" : "▼"}
+      <div className={`flex flex-col items-center ${isTop ? "" : "flex-col-reverse"}`}>
+        {count > 0 &&
+          Array.from({ length: visibleStack }).map((_, i) => (
+            <div
+              key={i}
+              className={`
+                w-4 h-4 sm:w-5 sm:h-5 rounded-full ${legionClass}
+                ${i > 0 ? "-mt-1.5 sm:-mt-2" : ""}
+              `}
+            />
+          ))}
+        {overflow > 0 && (
+          <span
+            className={`
+              mt-1 px-1 py-[1px] text-[8px] sm:text-[9px] font-mono font-bold
+              tracking-widest uppercase leading-none
+              ${isHost ? "text-red-100 bg-red-800/90" : "text-amber-100 bg-amber-700/90"}
+              overflow-chevron crt-glow
+            `}
+          >
+            +{overflow}
+          </span>
+        )}
+      </div>
+      {/* Column label — vertical role tag */}
+      <div
+        className={`
+          absolute ${isTop ? "bottom-0.5" : "top-0.5"} left-1/2 -translate-x-1/2
+          text-[7px] sm:text-[8px] font-mono tracking-widest uppercase
+          ${isHost ? "text-red-300/70" : "text-amber-300/70"}
+        `}
+      >
+        {isHost ? "H" : "G"}
       </div>
     </div>
   );
@@ -251,9 +345,19 @@ function TriangularPoint({
   const ownerClass = point.owner === "HOST" ? "legion-host" : point.owner === "GUEST" ? "legion-guest" : "";
   const isProtected = point.activeEffects && point.activeEffects.length > 0;
 
-  // Cap visible stack to 5; overflow shown as badge
-  const visibleStack = Math.min(point.count, 5);
-  const overflow = point.count - visibleStack;
+  // Adaptive stack compression:
+  //  - ≤5 legions:  show all, standard -2px overlap.
+  //  - 6-9:         show 5, tighter -4px overlap, sharp `+N` chevron.
+  //  - 10+:         show 4, even tighter -6px overlap, wide `+N` chevron.
+  const { visibleStack, overflow, stackStepClass } = (() => {
+    if (point.count <= 5) {
+      return { visibleStack: point.count, overflow: 0, stackStepClass: "-mt-1 sm:-mt-2" };
+    }
+    if (point.count <= 9) {
+      return { visibleStack: 5, overflow: point.count - 5, stackStepClass: "-mt-2 sm:-mt-3" };
+    }
+    return { visibleStack: 4, overflow: point.count - 4, stackStepClass: "-mt-3 sm:-mt-4" };
+  })();
 
   // Triangle uses clip-path for the "trench" shape
   const trianglePath = isTop
@@ -267,6 +371,19 @@ function TriangularPoint({
   };
 
   const clickable = canSelect || isValidTarget || isItemTarget;
+
+  // Item-target outline color depends on the ambient targetingItem — we don't
+  // have that prop here, but the ring color convention is:
+  //   - AIR_STRIKE  → red (hostile strike) → .item-target-strike
+  //   - ANGELIC_PROTECTION → blue (friendly) → .item-target-protect
+  // We inspect the point's owner as a proxy: targeting your own pieces =
+  // protect, targeting opponent = strike. Not 100% accurate across all items
+  // but visually correct for the two items currently in the game.
+  const itemOutlineClass = isItemTarget
+    ? point.owner && point.owner === "HOST"
+      ? "item-target-protect" // friendly-only view TODO: pipe real targetingItem in
+      : "item-target-strike"
+    : "";
 
   return (
     <div
@@ -284,18 +401,27 @@ function TriangularPoint({
         relative flex flex-col items-center min-h-[80px] sm:min-h-[120px] md:min-h-[150px]
         ${isTop ? "justify-start" : "justify-end"}
         ${clickable ? "cursor-pointer" : ""}
-        ${isSelected ? "crt-pulse rounded" : ""}
+        ${isSelected ? "crt-pulse" : ""}
         transition
       `}
     >
-      {/* Triangle trench backdrop */}
+      {/* Triangle trench backdrop (clipped) */}
       <div
-        className={`absolute inset-0 ${trenchClass} ${isValidTarget ? "ring-2 ring-green-400 ring-inset" : ""} ${isItemTarget ? "ring-2 ring-amber-400 ring-inset" : ""}`}
+        className={`
+          absolute inset-0 ${trenchClass}
+          ${isValidTarget ? "target-valid-ring" : ""}
+          ${itemOutlineClass}
+        `}
         style={{ clipPath: trianglePath }}
       />
 
-      {/* Pieces stack — vertical, overlapping slightly */}
-      <div className={`relative z-10 flex flex-col items-center ${isTop ? "pt-1" : "pb-1"} ${isTop ? "" : "flex-col-reverse"}`}>
+      {/* Pieces stack — vertical, overlapping with adaptive compression */}
+      <div
+        className={`
+          relative z-10 flex flex-col items-center w-full
+          ${isTop ? "pt-1" : "pb-1"} ${isTop ? "" : "flex-col-reverse"}
+        `}
+      >
         {hasPieces && (
           <>
             {Array.from({ length: visibleStack }).map((_, i) => (
@@ -303,40 +429,47 @@ function TriangularPoint({
                 key={i}
                 className={`
                   w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full ${ownerClass}
-                  ${i > 0 ? "-mt-1 sm:-mt-2" : ""}
+                  ${i > 0 ? stackStepClass : ""}
                 `}
               />
             ))}
             {overflow > 0 && (
               <span
                 className={`
-                  text-[9px] sm:text-[10px] font-mono font-bold mt-0.5 crt-glow
-                  ${point.owner === "HOST" ? "text-red-300" : "text-amber-200"}
+                  mt-0.5 sm:mt-1 px-1 py-[1px] text-[9px] sm:text-[10px]
+                  font-mono font-bold tracking-widest uppercase leading-none
+                  ${point.owner === "HOST"
+                    ? "bg-red-800/95 text-red-50"
+                    : "bg-amber-700/95 text-amber-50"}
+                  ${isTop ? "overflow-chevron" : "overflow-chevron-reverse"}
+                  crt-glow
                 `}
+                title={`${point.count} legions total`}
               >
                 +{overflow}
               </span>
             )}
             {isProtected && (
               <span
-                className="absolute -top-1 -right-1 text-[9px] sm:text-[10px] text-cyan-300 crt-glow-green animate-pulse"
+                className="absolute -top-1 right-0 text-[9px] sm:text-[10px] text-cyan-300 crt-glow-green"
                 title="Angelic Protection active"
               >
-                🛡
+                ▲▲
               </span>
             )}
           </>
         )}
       </div>
 
-      {/* Point number label — bottom for top row, top for bottom row */}
+      {/* Trench index tag — tiny industrial label anchored to the base */}
       <span
         className={`
           absolute ${isTop ? "bottom-0" : "top-0"} left-1/2 -translate-x-1/2
-          text-[8px] sm:text-[9px] font-mono text-amber-600/70 crt-glow
+          text-[8px] sm:text-[9px] font-mono tracking-widest
+          text-amber-500/70 crt-glow z-20
         `}
       >
-        {index + 1}
+        {String(index + 1).padStart(2, "0")}
       </span>
     </div>
   );

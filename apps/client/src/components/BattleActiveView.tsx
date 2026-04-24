@@ -123,48 +123,57 @@ export default function BattleActiveView() {
     >
       {/* Header */}
       <div className="flex flex-col items-center gap-1 w-full px-4">
-        <div className="flex items-center justify-between w-full">
-          <h2 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+        <div className="flex items-center justify-between w-full gap-3 flex-wrap">
+          <h2 className="text-xl font-mono font-bold tracking-wider uppercase text-amber-300 crt-glow flex items-center gap-2">
             <span className="text-2xl">{planetIcon}</span>
             {planetName}
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="chrome-plate chamfer-panel noise-overlay flex items-center gap-3 px-3 py-1">
             {battle.escalation.multiplier > 1 && (
-              <span className="text-sm font-bold text-red-400">
-                {battle.escalation.multiplier}× Stakes
+              <span className="flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-widest text-red-300 crt-glow">
+                <span className="led-dot bg-red-400 text-red-400 animate-pulse" />
+                {battle.escalation.multiplier}× STAKES
               </span>
             )}
-            <span className="text-sm text-gray-400">
-              Turn {battle.turnCount} — {isMyTurn ? "Your turn" : "Opponent's turn"}
+            <span className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-stone-200">
+              <span
+                className={`led-dot ${isMyTurn ? "bg-emerald-400 text-emerald-400" : "bg-stone-500 text-stone-500"}`}
+              />
+              TURN {String(battle.turnCount).padStart(2, "0")} · {isMyTurn ? "YOUR MOVE" : "OPPONENT"}
             </span>
-            <span className="text-xs text-amber-300">
-              Scrap: {myPlayer?.voidScrap ?? 0}
+            <span className="text-[11px] font-mono uppercase tracking-widest text-amber-300 crt-glow">
+              SCRAP {String(myPlayer?.voidScrap ?? 0).padStart(3, "0")}
             </span>
           </div>
         </div>
         {planetEffect && (
           <div
-            className={`px-3 py-1 rounded-full text-xs border ${
+            className={`chamfer-panel noise-overlay px-3 py-1 text-xs font-mono tracking-wide uppercase ${
               isSabotaged
-                ? "border-red-800 bg-red-950/40 text-red-400 line-through opacity-70"
-                : "border-amber-800/60 bg-amber-950/30 text-amber-300"
+                ? "rust-plate text-red-200 line-through opacity-80"
+                : "brass-plate text-amber-100 crt-glow"
             }`}
             title={isSabotaged ? "Modifier sabotaged for this match" : "Active planetary modifier"}
           >
-            {isSabotaged && <span className="mr-1 no-underline">⚠ SABOTAGED:</span>}
+            {isSabotaged && <span className="mr-1 no-underline text-red-300">▲ SABOTAGED ·</span>}
             {planetEffect}
           </div>
         )}
       </div>
 
-      {/* Dice */}
-      <div className="flex gap-3 items-center">
+      {/* Dice — chrome-plated industrial tiles */}
+      <div className="flex gap-2 sm:gap-3 items-center">
         {dice ? (
           dice.map((d, i) => (
             <div
               key={i}
-              className={`w-10 h-10 rounded border-2 flex items-center justify-center font-bold text-lg transition-all duration-300
-                ${diceUsed[i] ? "border-gray-700 text-gray-600 bg-gray-900" : "border-amber-500 text-amber-400 bg-gray-800"}
+              className={`
+                w-10 h-10 chamfer-panel noise-overlay
+                flex items-center justify-center font-mono font-bold text-lg
+                transition-all duration-300
+                ${diceUsed[i]
+                  ? "chrome-plate text-gray-500 opacity-60"
+                  : "chrome-plate text-amber-300 crt-glow"}
                 ${diceRolling ? "animate-bounce scale-110" : ""}
               `}
             >
@@ -176,9 +185,9 @@ export default function BattleActiveView() {
             <button
               onClick={handleRoll}
               data-testid="btn-roll-dice"
-              className="px-6 py-2 bg-amber-600 hover:bg-amber-500 rounded font-bold transition"
+              className="chamfer-panel brass-plate noise-overlay px-6 py-2 font-mono font-bold tracking-widest uppercase text-amber-50 crt-glow hover:brightness-125 transition"
             >
-              Roll Dice
+              ▶ Roll Dice
             </button>
           )
         )}
@@ -197,24 +206,25 @@ export default function BattleActiveView() {
         onTargetClick={handleTargetClick}
       />
 
-      {/* Pending moves + submit */}
+      {/* Pending moves + submit — chrome command strip */}
       {pendingMoves.length > 0 && (
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400">
-            {pendingMoves.length} move(s) pending
+        <div className="chrome-plate chamfer-panel noise-overlay flex items-center gap-3 px-3 py-1">
+          <span className="led-dot bg-amber-300 text-amber-300" />
+          <span className="text-[11px] font-mono tracking-widest uppercase text-amber-200 crt-glow">
+            {pendingMoves.length} MOVE{pendingMoves.length === 1 ? "" : "S"} PENDING
           </span>
           <button
             onClick={handleSubmitMoves}
             data-testid="btn-submit-moves"
             data-pending-count={pendingMoves.length}
-            className="px-4 py-1 bg-green-700 hover:bg-green-600 rounded font-bold text-sm transition"
+            className="chamfer-panel px-3 py-[2px] bg-emerald-700 hover:bg-emerald-600 font-mono font-bold tracking-widest text-[11px] uppercase text-emerald-50 crt-glow-green transition"
           >
-            Submit
+            ▶ Submit
           </button>
           <button
             onClick={handleClearMoves}
             data-testid="btn-clear-moves"
-            className="px-4 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition"
+            className="chamfer-panel px-3 py-[2px] bg-stone-700 hover:bg-stone-600 font-mono tracking-widest text-[11px] uppercase text-stone-100 transition"
           >
             Clear
           </button>
@@ -233,9 +243,9 @@ export default function BattleActiveView() {
           battle.escalation.controllerPlayerId === clientId && (
           <button
             onClick={() => { playEscalation(); sendGameIntent("INTENT_INVOKE_ESCALATION", {}); }}
-            className="px-3 py-1 bg-red-800 hover:bg-red-700 text-red-200 rounded text-xs font-bold transition"
+            className="chamfer-panel rust-plate noise-overlay px-3 py-1 text-[11px] font-mono font-bold tracking-widest uppercase text-red-100 crt-glow hover:brightness-125 transition"
           >
-            Escalate ({battle.escalation.multiplier * 2}×)
+            ▲▲ Escalate · {battle.escalation.multiplier * 2}×
           </button>
         )}
 
@@ -273,12 +283,12 @@ export default function BattleActiveView() {
                 }
               }}
               disabled={!canUse}
-              className={`px-3 py-1 rounded text-xs transition ${
+              className={`chamfer-panel noise-overlay px-3 py-1 text-[11px] font-mono font-bold tracking-widest uppercase transition ${
                 isActive
-                  ? "bg-amber-600 text-white ring-2 ring-amber-400"
+                  ? "brass-plate text-amber-50 ring-2 ring-amber-300 crt-glow"
                   : canUse
-                    ? "bg-amber-800 hover:bg-amber-700 text-amber-200"
-                    : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                    ? "brass-plate text-amber-100 crt-glow hover:brightness-125"
+                    : "chrome-plate text-stone-500 opacity-60 cursor-not-allowed"
               }`}
             >
               {def.name}
@@ -289,9 +299,10 @@ export default function BattleActiveView() {
         <button
           onClick={() => sendGameIntent("INTENT_FORFEIT", {})}
           data-testid="btn-forfeit"
-          className="px-3 py-1 bg-red-900/40 hover:bg-red-900/60 text-red-400 rounded text-xs transition"
+          className="chamfer-panel px-3 py-1 border border-red-900/80 bg-red-950/80 hover:hazard-stripe text-[11px] font-mono font-bold tracking-widest uppercase text-red-200 crt-glow transition"
+          title="Abandon this engagement"
         >
-          Forfeit
+          ▲ Forfeit
         </button>
       </div>
     </div>

@@ -111,4 +111,157 @@
   .crt-pulse {
     animation: crt-pulse 1.4s ease-in-out infinite;
   }
+
+  /* ─────────────────────────────────────────────────────────
+     Industrial Bauhaus primitives — added for Beautification Pass
+     ───────────────────────────────────────────────────────── */
+
+  /* Chamfered geometric panel — sharp corners with a small 45° chamfer
+     at opposing vertices, evoking riveted steel plating. */
+  .chamfer-panel {
+    clip-path: polygon(
+      6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px),
+      calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px
+    );
+  }
+
+  /* Brushed metal chrome fill (neutral grey, used for chrome pips / panels) */
+  .chrome-plate {
+    background:
+      linear-gradient(180deg, #3a3d42 0%, #1c1e22 55%, #2a2d31 100%),
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 0 1px,
+        transparent 1px 3px
+      );
+    background-blend-mode: overlay;
+    border: 1px solid #0a0b0d;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  /* Rusted iron plate — for HOST-affiliated chrome */
+  .rust-plate {
+    background:
+      linear-gradient(180deg, #5a2a1e 0%, #2a0e08 55%, #3a160e 100%),
+      repeating-linear-gradient(
+        135deg,
+        rgba(255, 130, 90, 0.04) 0 2px,
+        transparent 2px 4px
+      );
+    background-blend-mode: overlay;
+    border: 1px solid #1a0604;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 150, 120, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.7);
+  }
+
+  /* Gilded brass plate — for GUEST-affiliated chrome */
+  .brass-plate {
+    background:
+      linear-gradient(180deg, #7a5820 0%, #3a2a10 55%, #4a3a18 100%),
+      repeating-linear-gradient(
+        135deg,
+        rgba(255, 220, 140, 0.05) 0 2px,
+        transparent 2px 4px
+      );
+    background-blend-mode: overlay;
+    border: 1px solid #1a1008;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 220, 150, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.7);
+  }
+
+  /* Hazard diagonal stripes (for forfeit / warning surfaces) */
+  .hazard-stripe {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(234, 88, 60, 0.9) 0 8px,
+      rgba(30, 10, 6, 0.9) 8px 16px
+    );
+  }
+
+  /* Thin LED status dot */
+  .led-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+    box-shadow: 0 0 6px currentColor, inset 0 0 2px rgba(0,0,0,0.6);
+  }
+
+  /* Sharp chevron/flag badge — used for overflow counts (+N) */
+  .overflow-chevron {
+    clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 50%, 100% 100%, 0 100%);
+    padding-right: 10px;
+    padding-left: 4px;
+    letter-spacing: 0.05em;
+  }
+  .overflow-chevron-reverse {
+    clip-path: polygon(6px 0, 100% 0, 100% 100%, 6px 100%, 0 50%);
+    padding-left: 10px;
+    padding-right: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Progress bar segments — industrial gauge look */
+  .gauge-segment-active-host {
+    background: linear-gradient(180deg, #e25a3a 0%, #8a2b18 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 180, 150, 0.5), 0 0 4px rgba(226, 90, 58, 0.5);
+  }
+  .gauge-segment-active-guest {
+    background: linear-gradient(180deg, #f2d062 0%, #8a6b20 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 240, 180, 0.55), 0 0 4px rgba(242, 208, 98, 0.5);
+  }
+  .gauge-segment-empty {
+    background: linear-gradient(180deg, #1a1d22 0%, #0a0d11 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 0 0 1px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Riveted corner dots for panels */
+  .rivet-corners {
+    position: relative;
+  }
+  .rivet-corners::before,
+  .rivet-corners::after {
+    content: "";
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: radial-gradient(circle, #d4a668 0%, #6b4a2b 60%, #1a0e06 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+  }
+  .rivet-corners::before { top: 3px; left: 3px; }
+  .rivet-corners::after { top: 3px; right: 3px; }
+
+  /* Subtle CSS-only noise overlay (SVG encoded as data URL) */
+  .noise-overlay {
+    position: relative;
+  }
+  .noise-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='120' height='120' filter='url(%23n)' opacity='0.6'/></svg>");
+  }
+
+  /* Item-targeting overlays — sharp inset ring, no rounded feel */
+  .item-target-strike {
+    outline: 2px solid rgba(226, 90, 58, 0.9);
+    outline-offset: -2px;
+    box-shadow: inset 0 0 14px rgba(226, 90, 58, 0.35);
+  }
+  .item-target-protect {
+    outline: 2px solid rgba(96, 165, 250, 0.9);
+    outline-offset: -2px;
+    box-shadow: inset 0 0 14px rgba(96, 165, 250, 0.35);
+  }
+  .target-valid-ring {
+    outline: 2px dashed rgba(74, 222, 128, 0.85);
+    outline-offset: -3px;
+  }
 }
