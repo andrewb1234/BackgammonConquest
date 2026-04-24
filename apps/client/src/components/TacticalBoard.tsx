@@ -115,14 +115,16 @@ export default function TacticalBoard({
         {/* TOP ROW: points 12-23 */}
         <div className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto_repeat(6,minmax(0,1fr))] gap-0 items-stretch">
           {renderTriangleRow(topLeft, true)}
-          <BarColumn
-            shownRole="GUEST"
-            count={bars.GUEST}
-            isTop
-            canSelect={canSelectBar("GUEST")}
-            selected={selectedPoint === "BAR" && myRole === "GUEST"}
-            onClick={() => canSelectBar("GUEST") && onPointClick("BAR")}
-          />
+          {bars.GUEST > 0 && (
+            <BarColumn
+              shownRole="GUEST"
+              count={bars.GUEST}
+              isTop
+              canSelect={canSelectBar("GUEST")}
+              selected={selectedPoint === "BAR" && myRole === "GUEST"}
+              onClick={() => canSelectBar("GUEST") && onPointClick("BAR")}
+            />
+          )}
           {renderTriangleRow(topRight, true)}
         </div>
 
@@ -132,14 +134,16 @@ export default function TacticalBoard({
         {/* BOTTOM ROW: points 0-11 */}
         <div className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto_repeat(6,minmax(0,1fr))] gap-0 items-stretch">
           {renderTriangleRow(bottomLeft, false)}
-          <BarColumn
-            shownRole="HOST"
-            count={bars.HOST}
-            isTop={false}
-            canSelect={canSelectBar("HOST")}
-            selected={selectedPoint === "BAR" && myRole === "HOST"}
-            onClick={() => canSelectBar("HOST") && onPointClick("BAR")}
-          />
+          {bars.HOST > 0 && (
+            <BarColumn
+              shownRole="HOST"
+              count={bars.HOST}
+              isTop={false}
+              canSelect={canSelectBar("HOST")}
+              selected={selectedPoint === "BAR" && myRole === "HOST"}
+              onClick={() => canSelectBar("HOST") && onPointClick("BAR")}
+            />
+          )}
           {renderTriangleRow(bottomRight, false)}
         </div>
 
