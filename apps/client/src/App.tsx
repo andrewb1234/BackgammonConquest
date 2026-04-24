@@ -47,9 +47,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0a0e14] text-white flex items-center justify-center p-4 noise-overlay">
       {criticalError && (
-        <div className="fixed top-0 inset-x-0 bg-red-900 text-red-200 p-3 text-center z-50">
+        <div className="fixed top-0 inset-x-0 bg-red-900 text-red-200 p-3 text-center z-50 border-b-2 border-red-500">
           <span className="font-bold">Error {criticalError.code}:</span>{" "}
           {criticalError.message}{" "}
           <button onClick={reset} className="underline ml-2">Return to Lobby</button>
@@ -57,7 +57,13 @@ function App() {
       )}
       <PeerOverlay />
       <div className="w-full max-w-2xl">
-        {renderView()}
+        {/* Outer industrial bay frame */}
+        <div className="chrome-plate chamfer-panel p-1 sm:p-2 border-2 border-amber-900/40">
+          {/* Inner sealed compartment */}
+          <div className="holo-surface border border-amber-900/30 p-2 sm:p-3">
+            {renderView()}
+          </div>
+        </div>
       </div>
     </div>
   );
