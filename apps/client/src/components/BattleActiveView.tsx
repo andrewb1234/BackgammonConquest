@@ -107,7 +107,7 @@ export default function BattleActiveView() {
 
   return (
     <div
-      className="flex flex-col items-center gap-4 w-full max-w-4xl"
+      className="relative flex flex-col items-center gap-4 w-full max-w-4xl mx-auto"
       data-testid="battle-active"
       data-my-role={myRole ?? ""}
       data-active-role={
@@ -121,34 +121,46 @@ export default function BattleActiveView() {
       data-escalation-status={battle.escalation.status}
       data-escalation-multiplier={battle.escalation.multiplier}
     >
-      {/* Header */}
-      <div className="flex flex-col items-center gap-1 w-full px-4">
+      {/* Header — planet context banner */}
+      <div className="flex flex-col items-center gap-2 w-full px-2">
         <div className="flex items-center justify-between w-full gap-3 flex-wrap">
-          <h2 className="text-xl font-mono font-bold tracking-wider uppercase text-amber-300 crt-glow flex items-center gap-2">
-            <span className="text-2xl">{planetIcon}</span>
-            {planetName}
-          </h2>
-          <div className="chrome-plate chamfer-panel noise-overlay flex items-center gap-3 px-3 py-1">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl text-secondary-container" aria-hidden>
+              {planetIcon}
+            </span>
+            <div>
+              <p className="telemetry-warm leading-none">// ENGAGEMENT //</p>
+              <h2 className="font-headline font-black text-lg sm:text-xl tracking-[0.2em] uppercase text-secondary-container crt-glow leading-tight">
+                {planetName}
+              </h2>
+            </div>
+          </div>
+          <div className="chrome-plate chamfer-panel noise-overlay flex items-center gap-3 px-3 py-1 flex-wrap">
             {battle.escalation.multiplier > 1 && (
-              <span className="flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-widest text-red-300 crt-glow">
-                <span className="led-dot bg-red-400 text-red-400 animate-pulse" />
+              <span className="flex items-center gap-1 text-[11px] font-headline font-bold uppercase tracking-[0.2em] text-error crt-glow">
+                <span className="led-dot bg-error text-error animate-pulse" />
                 {battle.escalation.multiplier}× STAKES
               </span>
             )}
-            <span className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-stone-200">
+            <span className="flex items-center gap-2 text-[11px] font-headline uppercase tracking-[0.2em] text-on-surface">
               <span
-                className={`led-dot ${isMyTurn ? "bg-emerald-400 text-emerald-400" : "bg-stone-500 text-stone-500"}`}
+                className={`led-dot ${
+                  isMyTurn
+                    ? "bg-emerald-400 text-emerald-400"
+                    : "bg-on-surface-variant/50 text-on-surface-variant/50"
+                }`}
               />
-              TURN {String(battle.turnCount).padStart(2, "0")} · {isMyTurn ? "YOUR MOVE" : "OPPONENT"}
+              TURN {String(battle.turnCount).padStart(2, "0")} ·{" "}
+              {isMyTurn ? "YOUR MOVE" : "OPPONENT"}
             </span>
-            <span className="text-[11px] font-mono uppercase tracking-widest text-amber-300 crt-glow">
+            <span className="text-[11px] font-headline uppercase tracking-[0.2em] text-tertiary crt-glow">
               SCRAP {String(myPlayer?.voidScrap ?? 0).padStart(3, "0")}
             </span>
           </div>
         </div>
         {planetEffect && (
           <div
-            className={`chamfer-panel noise-overlay px-3 py-1 text-xs font-mono tracking-wide uppercase ${
+            className={`chamfer-panel noise-overlay px-3 py-1 text-xs font-headline tracking-[0.15em] uppercase ${
               isSabotaged
                 ? "rust-plate text-red-200 line-through opacity-80"
                 : "brass-plate text-amber-100 crt-glow"
@@ -206,30 +218,47 @@ export default function BattleActiveView() {
         onTargetClick={handleTargetClick}
       />
 
-      {/* Pending moves + submit — chrome command strip */}
-      {pendingMoves.length > 0 && (
-        <div className="chrome-plate chamfer-panel noise-overlay flex items-center gap-3 px-3 py-1">
-          <span className="led-dot bg-amber-300 text-amber-300" />
-          <span className="text-[11px] font-mono tracking-widest uppercase text-amber-200 crt-glow">
-            {pendingMoves.length} MOVE{pendingMoves.length === 1 ? "" : "S"} PENDING
-          </span>
-          <button
-            onClick={handleSubmitMoves}
-            data-testid="btn-submit-moves"
-            data-pending-count={pendingMoves.length}
-            className="chamfer-panel px-3 py-[2px] bg-emerald-700 hover:bg-emerald-600 font-mono font-bold tracking-widest text-[11px] uppercase text-emerald-50 crt-glow-green transition"
+      {/* Pending-moves command strip — height reserved whether pending or idle,
+          so selecting a piece never reflows the rest of the page. */}
+      <div
+        data-testid="pending-strip"
+        data-pending-count={pendingMoves.length}
+        className="h-8 flex items-center justify-center"
+      >
+        {pendingMoves.length > 0 ? (
+          <div className="chrome-plate chamfer-panel noise-overlay flex items-center gap-3 px-3 py-1">
+            <span className="led-dot bg-amber-300 text-amber-300" />
+            <span className="text-[11px] font-mono tracking-widest uppercase text-amber-200 crt-glow">
+              {pendingMoves.length} MOVE{pendingMoves.length === 1 ? "" : "S"} PENDING
+            </span>
+            <button
+              onClick={handleSubmitMoves}
+              data-testid="btn-submit-moves"
+              data-pending-count={pendingMoves.length}
+              className="chamfer-panel px-3 py-[2px] bg-emerald-700 hover:bg-emerald-600 font-mono font-bold tracking-widest text-[11px] uppercase text-emerald-50 crt-glow-green transition"
+            >
+              ▶ Submit
+            </button>
+            <button
+              onClick={handleClearMoves}
+              data-testid="btn-clear-moves"
+              className="chamfer-panel px-3 py-[2px] bg-stone-700 hover:bg-stone-600 font-mono tracking-widest text-[11px] uppercase text-stone-100 transition"
+            >
+              Clear
+            </button>
+          </div>
+        ) : (
+          <div
+            className="flex items-center gap-3 px-3 py-1 opacity-40"
+            aria-hidden="true"
           >
-            ▶ Submit
-          </button>
-          <button
-            onClick={handleClearMoves}
-            data-testid="btn-clear-moves"
-            className="chamfer-panel px-3 py-[2px] bg-stone-700 hover:bg-stone-600 font-mono tracking-widest text-[11px] uppercase text-stone-100 transition"
-          >
-            Clear
-          </button>
-        </div>
-      )}
+            <span className="led-dot bg-stone-500 text-stone-500" />
+            <span className="text-[11px] font-mono tracking-widest uppercase text-stone-500">
+              {isMyTurn && dice ? "SELECT A LEGION" : "AWAITING ORDERS"}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Rejection feedback */}
       {lastRejection && (

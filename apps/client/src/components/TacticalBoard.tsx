@@ -256,22 +256,6 @@ function BarColumn({
   const plate = isHost ? "rust-plate" : "brass-plate";
   const legionClass = isHost ? "legion-host" : "legion-guest";
 
-  // When empty, render a zero-width stub that preserves the semantic DOM
-  // contract (data-testid / data-count / data-owner / data-selectable) for
-  // Playwright while hiding the visual plate chassis.
-  if (count === 0) {
-    return (
-      <div
-        data-testid={testId}
-        data-owner={shownRole}
-        data-count={0}
-        data-selectable={String(canSelect)}
-        aria-hidden="true"
-        className="w-0 h-0 overflow-hidden"
-      />
-    );
-  }
-
   // Show up to 4 stacked mini-legions, then a sharp chevron `+N` badge.
   const visibleStack = Math.min(count, 4);
   const overflow = count - visibleStack;
@@ -299,7 +283,7 @@ function BarColumn({
               key={i}
               className={`
                 w-4 h-4 sm:w-5 sm:h-5 rounded-full ${legionClass}
-                ${i > 0 ? "-mt-1.5 sm:-mt-2" : ""}
+                ${i > 0 ? (isTop ? "-mt-1.5 sm:-mt-2" : "-mb-1.5 sm:-mb-2") : ""}
               `}
             />
           ))}
@@ -364,18 +348,35 @@ function TriangularPoint({
   const ownerClass = point.owner === "HOST" ? "legion-host" : point.owner === "GUEST" ? "legion-guest" : "";
   const isProtected = point.activeEffects && point.activeEffects.length > 0;
 
-  // Adaptive stack compression:
+  // Adaptive stack compression. Note: we use `margin-top` for top-row trenches
+  // (flex-col) and `margin-bottom` for bottom-row trenches (flex-col-reverse).
+  // In flex-col-reverse, `margin-top` would apply to the piece's main-end side
+  // (the one facing the NEXT piece above), leaving the base piece visually
+  // unlayered — so we must use `margin-bottom` there to overlap the base too.
   //  - ≤5 legions:  show all, standard -2px overlap.
   //  - 6-9:         show 5, tighter -4px overlap, sharp `+N` chevron.
   //  - 10+:         show 4, even tighter -6px overlap, wide `+N` chevron.
   const { visibleStack, overflow, stackStepClass } = (() => {
+    const step = (top: string, bot: string) => (isTop ? top : bot);
     if (point.count <= 5) {
-      return { visibleStack: point.count, overflow: 0, stackStepClass: "-mt-1 sm:-mt-2" };
+      return {
+        visibleStack: point.count,
+        overflow: 0,
+        stackStepClass: step("-mt-1 sm:-mt-2", "-mb-1 sm:-mb-2"),
+      };
     }
     if (point.count <= 9) {
-      return { visibleStack: 5, overflow: point.count - 5, stackStepClass: "-mt-2 sm:-mt-3" };
+      return {
+        visibleStack: 5,
+        overflow: point.count - 5,
+        stackStepClass: step("-mt-2 sm:-mt-3", "-mb-2 sm:-mb-3"),
+      };
     }
-    return { visibleStack: 4, overflow: point.count - 4, stackStepClass: "-mt-3 sm:-mt-4" };
+    return {
+      visibleStack: 4,
+      overflow: point.count - 4,
+      stackStepClass: step("-mt-3 sm:-mt-4", "-mb-3 sm:-mb-4"),
+    };
   })();
 
   // Triangle uses clip-path for the "trench" shape

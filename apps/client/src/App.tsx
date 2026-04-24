@@ -10,6 +10,7 @@ import CampaignResultView from "./components/CampaignResultView";
 import LoadoutView from "./components/LoadoutView";
 import EscalationPromptView from "./components/EscalationPromptView";
 import PeerOverlay from "./components/PeerOverlay";
+import ArchonShell from "./components/ArchonShell";
 
 function App() {
   const init = useGameStore((s) => s.init);
@@ -47,25 +48,28 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0e14] text-white flex items-center justify-center p-4 noise-overlay">
+    <>
       {criticalError && (
-        <div className="fixed top-0 inset-x-0 bg-red-900 text-red-200 p-3 text-center z-50 border-b-2 border-red-500">
-          <span className="font-bold">Error {criticalError.code}:</span>{" "}
-          {criticalError.message}{" "}
-          <button onClick={reset} className="underline ml-2">Return to Lobby</button>
+        <div
+          className="fixed top-0 inset-x-0 z-50 bg-error-container/95 text-on-error-container px-4 py-3 text-center border-b-2 border-error font-headline tracking-[0.15em] uppercase text-[12px]"
+          role="alert"
+        >
+          <span className="font-black">SYSTEM FAULT {criticalError.code}</span>
+          <span className="mx-3 opacity-60">·</span>
+          <span className="font-body normal-case tracking-normal text-sm">
+            {criticalError.message}
+          </span>
+          <button
+            onClick={reset}
+            className="ml-4 underline hover:text-error focus:outline-none"
+          >
+            Return to Lobby
+          </button>
         </div>
       )}
       <PeerOverlay />
-      <div className="w-full max-w-2xl">
-        {/* Outer industrial bay frame */}
-        <div className="chrome-plate chamfer-panel p-1 sm:p-2 border-2 border-amber-900/40">
-          {/* Inner sealed compartment */}
-          <div className="holo-surface border border-amber-900/30 p-2 sm:p-3">
-            {renderView()}
-          </div>
-        </div>
-      </div>
-    </div>
+      <ArchonShell>{renderView()}</ArchonShell>
+    </>
   );
 }
 

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HEGEMONY COMMAND ARCHON - ESCALATION PROTOCOL</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#001e2c",
+                    "secondary-container": "#fd8b00",
+                    "primary": "#8fd6ff",
+                    "error": "#ffb4ab",
+                    "primary-fixed-dim": "#7ad0ff",
+                    "surface-container-low": "#181c22",
+                    "on-secondary-fixed": "#2f1500",
+                    "surface-container-lowest": "#0a0e14",
+                    "surface": "#10141a",
+                    "on-surface": "#dfe2eb",
+                    "on-surface-variant": "#bcc8d1",
+                    "on-tertiary-fixed": "#221b00",
+                    "tertiary-fixed": "#ffe16d",
+                    "on-primary-container": "#004a65",
+                    "on-background": "#dfe2eb",
+                    "surface-container-highest": "#31353c",
+                    "primary-container": "#00bfff",
+                    "inverse-on-surface": "#2d3137",
+                    "tertiary-fixed-dim": "#e9c400",
+                    "surface-container": "#1c2026",
+                    "outline-variant": "#3d4850",
+                    "on-secondary-container": "#603100",
+                    "on-tertiary-fixed-variant": "#544600",
+                    "secondary-fixed": "#ffdcc3",
+                    "on-error-container": "#ffdad6",
+                    "surface-bright": "#353940",
+                    "primary-fixed": "#c3e8ff",
+                    "surface-variant": "#31353c",
+                    "outline": "#87929b",
+                    "error-container": "#93000a",
+                    "tertiary": "#f1cb00",
+                    "on-tertiary": "#3a3000",
+                    "on-primary": "#003549",
+                    "background": "#10141a",
+                    "surface-tint": "#7ad0ff",
+                    "inverse-primary": "#00668a",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "surface-dim": "#10141a",
+                    "on-primary-fixed-variant": "#004c69",
+                    "inverse-surface": "#dfe2eb",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "secondary": "#ffb77d",
+                    "tertiary-container": "#d1b000",
+                    "on-tertiary-container": "#524400",
+                    "on-secondary": "#4d2600",
+                    "surface-container-high": "#262a31",
+                    "on-error": "#690005"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0rem",
+                    "lg": "0rem",
+                    "xl": "0rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scanline {
+            background: linear-gradient(to bottom, transparent 50%, rgba(253, 139, 0, 0.05) 50%);
+            background-size: 100% 4px;
+        }
+        .glitch-text {
+            text-shadow: 2px 0 #fd8b00, -2px 0 #00bfff;
+        }
+        .hologram-grid {
+            background-image: radial-gradient(rgba(253, 139, 0, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body overflow-hidden">
+<!-- Background Layer (Blurred Command Table) -->
+<div class="fixed inset-0 z-0">
+<div class="absolute inset-0 bg-cover bg-center opacity-40 blur-md grayscale" data-alt="High-tech futuristic command center with glowing holographic maps and tactical displays in a dark sci-fi environment" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBCTa6eWqUDhMA3SxPwiooi9KRVIhN7rWu-eeVceMDPncgz6DIyVQceiiiOz5-JE-V_pr8emLa3VofMHGvDjwDv6p4UtZElQC4JN9nkwKGhX-B6S999rlfg7GGGKrnGvFzWnggBr4VpD7JMQuHRKj6HV9B0aBb5Xhd44vcGJXrE-O3e3jsdd6-Awj2qeaSIa8pFjYnGVvIKKMaiKWEoRLJiHxtOo3pWzniBDEaJUBHKmy5D3CKqYNPRN1dbyUaxRZnUE-EYQqbkeYY')">
+</div>
+<div class="absolute inset-0 bg-surface/80"></div>
+</div>
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-14 bg-slate-950/60 backdrop-blur-xl border-b-[0.5px] border-orange-500/20 shadow-[0_0_20px_rgba(253,139,0,0.15)]">
+<div class="flex items-center gap-4">
+<span class="font-['Space_Grotesk'] uppercase tracking-[0.1em] text-sm font-black text-orange-500 tracking-tighter">HEGEMONY_COMMAND_ARCHON</span>
+</div>
+<nav class="hidden md:flex gap-8 items-center">
+<span class="font-['Space_Grotesk'] uppercase tracking-[0.1em] text-sm text-orange-900/60 hover:bg-orange-500/10 hover:text-orange-300 transition-all duration-75 px-2 py-1 cursor-pointer">VOID-SCRAP: 14.2K</span>
+<span class="font-['Space_Grotesk'] uppercase tracking-[0.1em] text-sm text-orange-900/60 hover:bg-orange-500/10 hover:text-orange-300 transition-all duration-75 px-2 py-1 cursor-pointer">MISSION: ECLIPSE</span>
+<span class="font-['Space_Grotesk'] uppercase tracking-[0.1em] text-sm text-orange-400 border-b border-orange-400 px-2 py-1">SYNC: 98%</span>
+</nav>
+<div class="flex items-center gap-4">
+<button class="font-['Space_Grotesk'] uppercase tracking-[0.1em] text-sm text-orange-500 dark:text-orange-400 font-bold border border-orange-500/30 px-3 py-1 scale-[0.99] hover:bg-orange-500/10">ARCHON_ACTIVE</button>
+<span class="material-symbols-outlined text-orange-500 cursor-pointer" data-icon="settings">settings</span>
+<span class="material-symbols-outlined text-orange-500 cursor-pointer" data-icon="terminal">terminal</span>
+</div>
+</header>
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-14 h-[calc(100vh-112px)] flex flex-col items-center py-8 z-40 bg-slate-950/40 backdrop-blur-md w-20 border-r-[0.5px] border-orange-500/20">
+<div class="flex flex-col gap-10 items-center">
+<div class="flex flex-col items-center gap-1">
+<div class="w-10 h-10 bg-orange-500/20 border border-orange-500 flex items-center justify-center">
+<span class="material-symbols-outlined text-orange-500" data-icon="warning" data-weight="fill" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<span class="font-['Space_Grotesk'] uppercase tracking-widest text-[8px] text-orange-500">SECTOR_7</span>
+</div>
+<div class="flex flex-col gap-8">
+<button class="group flex flex-col items-center gap-1 text-orange-500/40 hover:text-orange-500">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+<span class="font-['Space_Grotesk'] uppercase tracking-widest text-[8px]">POWER-UPS</span>
+</button>
+<button class="group flex flex-col items-center gap-1 text-orange-500/40 hover:text-orange-500">
+<span class="material-symbols-outlined" data-icon="language">language</span>
+<span class="font-['Space_Grotesk'] uppercase tracking-widest text-[8px]">ADVANTAGES</span>
+</button>
+<button class="group flex flex-col items-center gap-1 bg-orange-500 text-slate-950 font-bold p-2">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+<span class="font-['Space_Grotesk'] uppercase tracking-widest text-[8px]">ESCALATION</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content: Escalation Protocol UI -->
+<main class="fixed inset-0 z-10 flex items-center justify-center pointer-events-none">
+<div class="w-full h-full flex flex-col items-center justify-center relative overflow-hidden pointer-events-auto">
+<!-- Warning Scanlines & Sirens (Visual Embellishments) -->
+<div class="absolute inset-0 scanline opacity-30"></div>
+<div class="absolute inset-0 flex justify-between pointer-events-none">
+<div class="w-32 h-full bg-gradient-to-r from-secondary-container/20 to-transparent"></div>
+<div class="w-32 h-full bg-gradient-to-l from-secondary-container/20 to-transparent"></div>
+</div>
+<!-- Central Holographic Cube Container -->
+<div class="relative z-20 flex flex-col items-center">
+<!-- Warning Text Header -->
+<div class="mb-8 text-center">
+<div class="flex items-center justify-center gap-4 mb-2">
+<span class="material-symbols-outlined text-secondary-container text-4xl animate-pulse" data-icon="priority_high">priority_high</span>
+<h2 class="font-headline font-black text-5xl tracking-[0.2em] text-secondary-container glitch-text">PLANETARY STAKES INCREASING</h2>
+<span class="material-symbols-outlined text-secondary-container text-4xl animate-pulse" data-icon="priority_high">priority_high</span>
+</div>
+<p class="font-headline uppercase text-secondary tracking-widest text-sm opacity-80">PROTOCOL: THE ULTIMATUM | STATUS: ACTIVE</p>
+</div>
+<!-- The Doubling Cube -->
+<div class="relative w-80 h-80 flex items-center justify-center">
+<!-- Outer Brackets -->
+<div class="absolute inset-0 border-2 border-secondary-container/30 border-dashed animate-[spin_20s_linear_infinite]"></div>
+<div class="absolute inset-4 border border-secondary/20 animate-[spin_15s_linear_infinite_reverse]"></div>
+<!-- The Cube Visual -->
+<div class="relative w-48 h-48 bg-slate-950 border-2 border-secondary-container flex flex-col items-center justify-center shadow-[0_0_60px_rgba(253,139,0,0.4)] backdrop-blur-md">
+<div class="absolute inset-0 hologram-grid opacity-20"></div>
+<span class="font-headline font-black text-8xl text-secondary-container">X2</span>
+<div class="absolute bottom-4 font-label text-[10px] tracking-[0.4em] text-secondary/60">MULTIPLIER_ACTIVE</div>
+<!-- Corner Tech Decor -->
+<div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-secondary-container"></div>
+<div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-secondary-container"></div>
+<div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-secondary-container"></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-secondary-container"></div>
+</div>
+<!-- Ambient Data Readouts -->
+<div class="absolute -right-32 top-1/2 -translate-y-1/2 text-left space-y-2 opacity-60 hidden lg:block">
+<p class="font-label text-[10px] text-primary">STAKE_VECTOR: 0.9928</p>
+<p class="font-label text-[10px] text-primary">ESCALATION_THREAT: CRITICAL</p>
+<p class="font-label text-[10px] text-primary">CORE_TEMP: 4500K</p>
+</div>
+<div class="absolute -left-32 top-1/2 -translate-y-1/2 text-right space-y-2 opacity-60 hidden lg:block">
+<p class="font-label text-[10px] text-secondary">H_COMMAND: CONFIRMED</p>
+<p class="font-label text-[10px] text-secondary">SCRAP_RESERVE: STABLE</p>
+<p class="font-label text-[10px] text-secondary">VOID_SYNC: SYNC_LOCK</p>
+</div>
+</div>
+<!-- Action Buttons Container -->
+<div class="mt-16 flex flex-col md:flex-row gap-8 w-full max-w-2xl px-6">
+<!-- Accept Button -->
+<button class="flex-1 bg-secondary-container group relative p-6 border-2 border-secondary-container hover:bg-transparent transition-all duration-150">
+<div class="flex flex-col items-center gap-2">
+<span class="font-headline font-black text-2xl tracking-tighter text-slate-950 group-hover:text-secondary-container">ACCEPT ULTIMATUM</span>
+<span class="font-label text-[10px] uppercase text-slate-900/60 group-hover:text-secondary/60">WIN/LOSS VALUE DOUBLES IMMEDIATELY</span>
+</div>
+<!-- Hover Glitch Effect -->
+<div class="absolute inset-0 bg-secondary-container/20 opacity-0 group-hover:opacity-100 animate-pulse pointer-events-none"></div>
+</button>
+<!-- Retreat Button -->
+<button class="flex-1 border-2 border-error text-error group relative p-6 hover:bg-error/10 transition-all duration-150">
+<div class="flex flex-col items-center gap-2">
+<span class="font-headline font-black text-2xl tracking-tighter">TACTICAL RETREAT</span>
+<span class="font-label text-[10px] uppercase text-error/60">LOSE PLANET | SALVAGE SCRAP RESERVES</span>
+</div>
+<div class="absolute top-0 right-0 p-1">
+<span class="material-symbols-outlined text-xs" data-icon="cancel">cancel</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Footer Warning Ticker -->
+<div class="absolute bottom-20 w-full overflow-hidden bg-secondary-container/10 py-1 border-y border-secondary-container/20">
+<div class="flex gap-12 whitespace-nowrap animate-[scroll_20s_linear_infinite]">
+<span class="font-headline text-xs font-bold text-secondary-container">CAUTION: HIGH STAKES DETECTED</span>
+<span class="font-headline text-xs font-bold text-secondary-container">SYST_OVERLOAD: ESCL_PRTCL_09</span>
+<span class="font-headline text-xs font-bold text-secondary-container">CAUTION: HIGH STAKES DETECTED</span>
+<span class="font-headline text-xs font-bold text-secondary-container">SYST_OVERLOAD: ESCL_PRTCL_09</span>
+<span class="font-headline text-xs font-bold text-secondary-container">CAUTION: HIGH STAKES DETECTED</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<footer class="fixed bottom-0 left-0 w-full flex justify-center gap-12 h-16 items-center bg-slate-950/80 backdrop-blur-2xl z-50 border-t-[2px] border-orange-600 shadow-[0_-10px_30px_rgba(253,139,0,0.1)]">
+<button class="flex flex-col items-center justify-center text-orange-900/50 px-6 py-2 hover:text-orange-300 scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-['Space_Grotesk'] font-bold text-[10px] tracking-tighter uppercase">STRATEGIC MAP</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-orange-500/20 text-orange-400 border-t-2 border-orange-400 px-6 py-2 scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-['Space_Grotesk'] font-bold text-[10px] tracking-tighter uppercase">COMMAND TABLE</span>
+</button>
+<button class="flex flex-col items-center justify-center text-orange-900/50 px-6 py-2 hover:text-orange-300 scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+<span class="font-['Space_Grotesk'] font-bold text-[10px] tracking-tighter uppercase">LOADOUT</span>
+</button>
+</footer>
+<!-- CSS Animation keyframes injected for functionality -->
+<style>
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</body></html>

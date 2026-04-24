@@ -46,73 +46,133 @@ export default function LoadoutView() {
     sendGameIntent("READY_LOADOUT", { selectedItems: selected });
   };
 
-  return (
-    <div className="flex flex-col items-center gap-6">
-      <h2 className="text-2xl font-bold text-amber-400">Loadout Phase</h2>
-      <p className="text-gray-400 text-sm">
-        Spend Void-Scrap to equip Tactical Items before battle
-      </p>
+  const overBudget = totalCost > myScrap;
+  const overSlots = selected.length > maxSlots;
 
-      {/* Status */}
-      <div className="flex gap-4 text-sm">
-        <span className="text-amber-300">Void-Scrap: {myScrap}</span>
-        <span className={totalCost > myScrap ? "text-red-400" : "text-green-400"}>
-          Cost: {totalCost}
-        </span>
-        <span className={selected.length > maxSlots ? "text-red-400" : "text-gray-400"}>
-          Slots: {selected.length}/{maxSlots}
-        </span>
+  return (
+    <div
+      data-testid="view-loadout"
+      className="relative w-full flex flex-col items-center gap-6 py-4"
+    >
+      <div className="absolute inset-0 hologram-grid opacity-20 pointer-events-none" />
+
+      {/* Header */}
+      <div className="relative z-10 text-center">
+        <p className="telemetry-warm mb-1">// TACTICAL LOADOUT //</p>
+        <h2 className="font-headline font-black text-2xl sm:text-3xl tracking-[0.2em] uppercase text-secondary-container">
+          Operator Loadout
+        </h2>
+        <p className="font-body text-sm text-on-surface-variant mt-2 max-w-lg mx-auto">
+          Commit Void-Scrap to tactical items before engagement.
+        </p>
       </div>
 
-      {/* Item Catalog */}
-      <div className="grid grid-cols-2 gap-3 max-w-lg">
+      {/* Resource ribbon */}
+      <div
+        data-testid="loadout-resources"
+        className="relative z-10 w-full max-w-2xl grid grid-cols-3 gap-2 font-headline uppercase tracking-[0.2em] text-[11px]"
+      >
+        <ResourceTile label="Void-Scrap" value={String(myScrap)} tone="tertiary" />
+        <ResourceTile
+          label="Committed"
+          value={String(totalCost)}
+          tone={overBudget ? "error" : "primary"}
+        />
+        <ResourceTile
+          label="Slots"
+          value={`${selected.length}/${maxSlots}`}
+          tone={overSlots ? "error" : "secondary"}
+        />
+      </div>
+
+      {/* Item catalog */}
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
         {ITEM_CATALOG.map((item) => {
           const isSelected = selected.includes(item.itemId);
           const canSelect = withinSlots || isSelected;
           return (
             <button
               key={item.itemId}
+              data-testid={`loadout-item-${item.itemId.toLowerCase()}`}
+              data-selected={String(isSelected)}
               onClick={() => canSelect && toggleItem(item.itemId)}
               disabled={isReady || (!canSelect && !isSelected)}
               className={`
-                p-3 rounded-lg border-2 text-left transition
-                ${isSelected ? "border-amber-500 bg-amber-900/20" : "border-gray-700 bg-gray-800/50"}
-                ${isReady ? "opacity-50 cursor-not-allowed" : "hover:border-gray-500"}
+                relative corner-brackets text-on-surface
+                bg-surface-container border border-outline-variant
+                p-4 text-left transition-colors
+                ${
+                  isSelected
+                    ? "ring-2 ring-secondary-container text-secondary"
+                    : "hover:border-secondary-container"
+                }
+                ${isReady ? "opacity-50 cursor-not-allowed" : ""}
               `}
             >
-              <div className="font-bold text-sm">{item.name}</div>
-              <div className="text-xs text-gray-400 mt-1">{item.description}</div>
-              <div className="text-xs text-amber-400 mt-1">
-                Cost: {item.cost} | Trigger: {item.trigger}
+              <span className="cb-bl" />
+              <span className="cb-br" />
+
+              <div className="flex items-start justify-between">
+                <h3 className="font-headline font-black text-sm uppercase tracking-[0.15em] text-on-surface">
+                  {item.name}
+                </h3>
+                <span className="font-headline text-[10px] tracking-[0.2em] uppercase text-tertiary">
+                  {item.cost} SCRAP
+                </span>
+              </div>
+              <p className="font-body text-xs text-on-surface-variant mt-2">
+                {item.description}
+              </p>
+              <div className="mt-3 flex items-center justify-between font-label text-[10px] tracking-[0.2em] uppercase">
+                <span className="text-on-surface-variant/70">TRIGGER</span>
+                <span className="text-secondary">{item.trigger}</span>
+              </div>
+              <div className="mt-2 h-4 flex items-center">
+                {isSelected ? (
+                  <span className="flex items-center gap-2 font-headline text-[10px] tracking-[0.25em] uppercase text-tertiary">
+                    <span className="w-2 h-2 bg-tertiary animate-pulse" />
+                    Equipped
+                  </span>
+                ) : (
+                  <span className="font-headline text-[10px] tracking-[0.25em] uppercase text-on-surface-variant/60">
+                    Tap To Equip
+                  </span>
+                )}
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Ready button */}
-      <button
-        onClick={handleReady}
-        disabled={isReady || !canAfford || !withinSlots}
-        className={`
-          px-6 py-3 rounded font-bold transition
-          ${isReady ? "bg-gray-700 text-gray-400 cursor-not-allowed" : "bg-amber-600 hover:bg-amber-500"}
-        `}
-      >
-        {isReady ? "✓ Ready — Waiting for opponent" : "Ready Up"}
-      </button>
-
-      {opponentReady && !isReady && (
-        <p className="text-yellow-400 text-sm">Opponent is ready!</p>
-      )}
-
-      {/* Sabotage use during LOADOUT */}
-      {isReady && myPlayer?.loadout?.some((i) => i.itemId === "SABOTAGE" && !i.consumed) && (
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-xs text-gray-400">
-            Use Sabotage now to disable an enemy node modifier for this match.
+      {/* Ready */}
+      <div className="relative z-10 flex flex-col items-center gap-3">
+        <button
+          onClick={handleReady}
+          disabled={isReady || !canAfford || !withinSlots}
+          data-testid="btn-ready-loadout"
+          className={isReady ? "btn-archon-ghost" : "btn-archon-primary"}
+        >
+          {isReady ? "✓ Ready · Awaiting Opponent" : "Ready Up"}
+        </button>
+        {opponentReady && !isReady && (
+          <p className="font-headline uppercase tracking-[0.25em] text-[11px] text-tertiary animate-pulse">
+            Opponent is ready — lock in your loadout
           </p>
-          <div className="flex gap-2 flex-wrap justify-center">
+        )}
+      </div>
+
+      {/* Sabotage strip — only surfaces mid-loadout after READY, for SABOTAGE owners */}
+      {isReady && myPlayer?.loadout?.some((i) => i.itemId === "SABOTAGE" && !i.consumed) && (
+        <div className="relative z-10 w-full max-w-2xl corner-brackets text-error bg-surface-container border border-error/40 p-4">
+          <span className="cb-bl" />
+          <span className="cb-br" />
+          <p className="font-headline uppercase tracking-[0.2em] text-xs text-error mb-2">
+            Sabotage Protocol Online
+          </p>
+          <p className="font-body text-xs text-on-surface-variant mb-3">
+            Disable an enemy node modifier for the upcoming engagement.
+          </p>
+          <div className="flex flex-wrap gap-2">
             {gameState?.campaign.nodes
               .map((n, idx) => ({ ...n, idx }))
               .filter((n) => n.owner !== null && n.owner !== myRole && n.owner !== "NEUTRAL")
@@ -122,8 +182,13 @@ export default function LoadoutView() {
                 return (
                   <button
                     key={n.idx}
-                    onClick={() => sendGameIntent("INTENT_USE_ITEM", { itemId: "SABOTAGE", targetId: n.idx })}
-                    className="px-3 py-1 bg-red-800 hover:bg-red-700 text-red-200 rounded text-xs transition"
+                    onClick={() =>
+                      sendGameIntent("INTENT_USE_ITEM", {
+                        itemId: "SABOTAGE",
+                        targetId: n.idx,
+                      })
+                    }
+                    className="btn-archon-caution text-[11px] py-2"
                   >
                     Sabotage {label}
                   </button>
@@ -132,6 +197,31 @@ export default function LoadoutView() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ResourceTile({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "tertiary" | "secondary" | "primary" | "error";
+}) {
+  const valueColor =
+    tone === "tertiary"
+      ? "text-tertiary"
+      : tone === "secondary"
+        ? "text-secondary"
+        : tone === "primary"
+          ? "text-primary"
+          : "text-error";
+  return (
+    <div className="chamfer-panel bg-surface-container border border-outline-variant px-3 py-2 flex flex-col items-center">
+      <span className="text-[10px] text-on-surface-variant">{label}</span>
+      <span className={`font-headline font-black text-lg ${valueColor}`}>{value}</span>
     </div>
   );
 }

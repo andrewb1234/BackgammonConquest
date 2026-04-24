@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* Body inherits the operator-terminal palette. Every view renders inside
+     this surface, so individual views should NOT set their own bg. */
+  html,
+  body,
+  #root {
+    background-color: #10141a;
+    color: #dfe2eb;
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+}
+
 @layer utilities {
   /* CRT scanlines overlay — subtle repeating horizontal lines */
   .crt-scanlines {
@@ -264,4 +277,234 @@
     outline: 2px dashed rgba(74, 222, 128, 0.85);
     outline-offset: -3px;
   }
+
+  /* ─────────────────────────────────────────────────────────
+     Hegemony Command Archon primitives — see AESTHETIC_NARRATIVE.md
+     ───────────────────────────────────────────────────────── */
+
+  /* Subtle scanline gradient. Apply as an absolute overlay on hero panels. */
+  .scanline {
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(253, 139, 0, 0.05) 50%
+    );
+    background-size: 100% 4px;
+  }
+
+  /* Hologram dot-grid — background for any "projection" surface */
+  .hologram-grid {
+    background-image: radial-gradient(
+      rgba(253, 139, 0, 0.12) 1px,
+      transparent 1px
+    );
+    background-size: 30px 30px;
+  }
+  .hologram-grid-cyan {
+    background-image: radial-gradient(
+      rgba(143, 214, 255, 0.1) 1px,
+      transparent 1px
+    );
+    background-size: 30px 30px;
+  }
+
+  /* Glitch text — dual-channel RGB offset, reserved for hero headlines */
+  .glitch-text {
+    text-shadow: 2px 0 #fd8b00, -2px 0 #00bfff;
+  }
+  .glitch-text-soft {
+    text-shadow: 1px 0 rgba(253, 139, 0, 0.6), -1px 0 rgba(143, 214, 255, 0.6);
+  }
+
+  /* L-shaped corner brackets — signature of any hero panel */
+  .corner-brackets {
+    position: relative;
+  }
+  .corner-brackets::before,
+  .corner-brackets::after,
+  .corner-brackets > .cb-br,
+  .corner-brackets > .cb-bl {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    pointer-events: none;
+  }
+  .corner-brackets::before {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+  }
+  .corner-brackets::after {
+    top: -1px;
+    right: -1px;
+    border-left: none;
+    border-bottom: none;
+  }
+  /* Since ::before/::after cover two corners, bottom corners need real nodes.
+     Consumers render <span class="cb-br" /> and <span class="cb-bl" /> inside
+     .corner-brackets when they want all four corners. */
+  .corner-brackets > .cb-br {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+  }
+  .corner-brackets > .cb-bl {
+    bottom: -1px;
+    left: -1px;
+    border-right: none;
+    border-top: none;
+  }
+
+  /* Warning ticker — infinite horizontal scroll strip.
+     Host element should have overflow-hidden; child uses `animate-ticker-scroll`
+     and must contain the content duplicated for seamless loop. */
+  .warning-ticker-host {
+    overflow: hidden;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 10%,
+      black 90%,
+      transparent 100%
+    );
+  }
+
+  /* Telemetry readout — small italicised data strings in side rails */
+  .telemetry {
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    color: #8fd6ff;
+  }
+  .telemetry-warm {
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    color: #ffb77d;
+  }
+
+  /* Ambient orbital rings — pair these on any hero sigil */
+  .orbital-ring {
+    position: absolute;
+    inset: 0;
+    border: 2px dashed rgba(253, 139, 0, 0.3);
+    animation: orbital-spin 20s linear infinite;
+    pointer-events: none;
+  }
+  .orbital-ring-inner {
+    position: absolute;
+    inset: 16px;
+    border: 1px solid rgba(255, 183, 125, 0.2);
+    animation: orbital-spin-reverse 15s linear infinite;
+    pointer-events: none;
+  }
+
+  /* Operator chrome: fixed top header / bottom footer shells */
+  .archon-header {
+    background-color: rgba(10, 14, 20, 0.6);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(253, 139, 0, 0.2);
+    box-shadow: 0 0 20px rgba(253, 139, 0, 0.15);
+  }
+  .archon-footer {
+    background-color: rgba(10, 14, 20, 0.8);
+    -webkit-backdrop-filter: blur(32px);
+    backdrop-filter: blur(32px);
+    border-top: 2px solid rgba(253, 139, 0, 0.6);
+    box-shadow: 0 -10px 30px rgba(253, 139, 0, 0.1);
+  }
+
+  /* Faction edge-wash — vertical gradient flanking a hero stage */
+  .edge-wash-left {
+    background: linear-gradient(
+      to right,
+      rgba(253, 139, 0, 0.15),
+      transparent
+    );
+  }
+  .edge-wash-right {
+    background: linear-gradient(
+      to left,
+      rgba(253, 139, 0, 0.15),
+      transparent
+    );
+  }
+
+  /* Solid action buttons — primary/secondary/caution */
+  .btn-archon-primary {
+    background-color: #00bfff;
+    color: #003549;
+    border: 2px solid #00bfff;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .btn-archon-primary:hover:not(:disabled) {
+    background-color: transparent;
+    color: #00bfff;
+  }
+  .btn-archon-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-archon-secondary {
+    background-color: #fd8b00;
+    color: #2f1500;
+    border: 2px solid #fd8b00;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .btn-archon-secondary:hover:not(:disabled) {
+    background-color: transparent;
+    color: #fd8b00;
+  }
+
+  .btn-archon-caution {
+    background-color: transparent;
+    color: #ffb4ab;
+    border: 2px solid #ffb4ab;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    transition: background-color 0.15s;
+  }
+  .btn-archon-caution:hover:not(:disabled) {
+    background-color: rgba(255, 180, 171, 0.1);
+  }
+
+  .btn-archon-ghost {
+    background-color: transparent;
+    color: #bcc8d1;
+    border: 1px solid #3d4850;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-archon-ghost:hover:not(:disabled) {
+    border-color: #fd8b00;
+    color: #ffb77d;
+  }
 }
+
