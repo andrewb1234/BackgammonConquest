@@ -90,9 +90,27 @@ function deriveUIView(gameState: GameState | null, hasSectorCode: boolean): UIVi
 // STORE
 // ---------------------------------------------------------
 
+// ---------------------------------------------------------
+// TEST HOOK: deterministic clientId + session via URL query params.
+// Production behavior is unaffected when no params are present.
+// ---------------------------------------------------------
+function readUrlOverrides(): { clientId?: string; sessionId?: string } {
+  if (typeof window === "undefined") return {};
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get("clientId") ?? undefined;
+    const sessionId = params.get("sessionId") ?? undefined;
+    return { clientId, sessionId };
+  } catch {
+    return {};
+  }
+}
+
+const _urlOverrides = readUrlOverrides();
+
 export const useGameStore = create<GameStoreState>((set, get) => ({
-  clientId: crypto.randomUUID(),
-  sessionId: null,
+  clientId: _urlOverrides.clientId ?? crypto.randomUUID(),
+  sessionId: _urlOverrides.sessionId ?? null,
   sectorCode: null,
   gameState: null,
   uiView: "LOBBY",
@@ -101,13 +119,17 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   criticalError: null,
 
   init: () => {
-    const { clientId } = get();
+    const { clientId, sessionId } = get();
     connectSocket();
 
     // Wait for connection before identifying
     const socket = connectSocket();
     socket.on("connect", () => {
       identify(clientId);
+      // If launched with ?clientId=&sessionId= (Playwright), auto-rejoin.
+      if (sessionId && _urlOverrides.sessionId) {
+        sendIntent("REJOIN_SESSION", { clientId, sessionId });
+      }
     });
 
     // Register broadcast listeners

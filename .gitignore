@@ -3,3 +3,12 @@ dist/
 .env
 *.log
 .DS_Store
+
+# TypeScript build artifacts
+*.tsbuildinfo
+apps/client/vite.config.d.ts
+
+# Playwright
+test-results/
+playwright-report/
+.playwright/

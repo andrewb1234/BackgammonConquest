@@ -17,6 +17,15 @@ interface TacticalBoardProps {
  * Top row (left→right): 12..17 | BAR | 18..23
  * Bottom row (left→right): 11..6 | BAR | 5..0
  * Fully responsive; points scale via CSS grid.
+ *
+ * Semantic DOM contract (consumed by Playwright GameTester fixture):
+ * - [data-testid="tactical-board"] — root
+ * - [data-testid="trench-{0..23}"] — each point, with data-owner/data-count/
+ *   data-selectable/data-targetable/data-item-targetable
+ * - [data-testid="void-buffer-host"|"void-buffer-guest"] — bar columns with
+ *   data-owner/data-count/data-selectable
+ * - [data-testid="orbital-evac-host"|"orbital-evac-guest"] — bear-off counters
+ *   with data-count
  */
 export default function TacticalBoard({
   board,
@@ -70,23 +79,52 @@ export default function TacticalBoard({
       );
     });
 
+  // The top bar column always renders the GUEST bar, the bottom always renders
+  // the HOST bar — independent of viewer perspective. This keeps test IDs
+  // stable. (See analysis in code comments below.)
+  const canSelectBar = (role: PlayerRole) =>
+    isMyTurn && !!dice && myRole === role && bars[role] > 0;
+
+  // Bearing off: the rules engine represents bear-off moves as toPoint=-1
+  // (HOST) or toPoint=24 (GUEST). When the user has selected a source that
+  // offers such a move, validTargets will contain that sentinel — surface
+  // it on the orbital-evac indicator as data-targetable so the player (and
+  // the Playwright fixture) can click it.
+  const hostCanBearOff = validTargets.has(-1);
+  const guestCanBearOff = validTargets.has(24);
+
   return (
-    <div className="metal-frame crt-scanlines border-2 rounded-lg p-2 sm:p-3 w-full">
+    <div
+      className="metal-frame crt-scanlines border-2 rounded-lg p-2 sm:p-3 w-full"
+      data-testid="tactical-board"
+      data-my-role={myRole ?? ""}
+      data-is-my-turn={String(isMyTurn)}
+      data-dice={dice ? dice.join(",") : ""}
+    >
       <div className="holo-surface rounded border border-amber-900/40 p-1 sm:p-2">
-        {/* GUEST bearing-off indicator (top row, shown only to GUEST) */}
+        {/* GUEST bearing-off indicator (top row) */}
         <div className="flex justify-end text-[9px] sm:text-[10px] font-mono text-amber-400/70 crt-glow px-1 mb-1 uppercase tracking-widest">
-          <span>Orbital Evac (GUEST) {borneOff.GUEST}/15</span>
+          <span
+            data-testid="orbital-evac-guest"
+            data-count={borneOff.GUEST}
+            data-targetable={String(guestCanBearOff)}
+            onClick={guestCanBearOff ? () => onTargetClick(24) : undefined}
+            className={`${guestCanBearOff ? "cursor-pointer ring-2 ring-green-400 rounded px-1" : ""}`}
+          >
+            Orbital Evac (GUEST) {borneOff.GUEST}/15
+          </span>
         </div>
 
-        {/* TOP ROW: points 12-23 (opponent's side from HOST perspective) */}
+        {/* TOP ROW: points 12-23 */}
         <div className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto_repeat(6,minmax(0,1fr))] gap-0 items-stretch">
           {renderTriangleRow(topLeft, true)}
           <BarColumn
-            bars={bars}
-            myRole={myRole}
+            shownRole="GUEST"
+            count={bars.GUEST}
             isTop
-            selected={selectedPoint === "BAR"}
-            onClick={() => myRole && bars[myRole] > 0 && onPointClick("BAR")}
+            canSelect={canSelectBar("GUEST")}
+            selected={selectedPoint === "BAR" && myRole === "GUEST"}
+            onClick={() => canSelectBar("GUEST") && onPointClick("BAR")}
           />
           {renderTriangleRow(topRight, true)}
         </div>
@@ -94,22 +132,31 @@ export default function TacticalBoard({
         {/* Mid-board ribbon (faction marker / divider) */}
         <div className="h-2 my-1 bg-gradient-to-r from-transparent via-amber-900/30 to-transparent" />
 
-        {/* BOTTOM ROW: points 0-11 (HOST side from HOST perspective) */}
+        {/* BOTTOM ROW: points 0-11 */}
         <div className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto_repeat(6,minmax(0,1fr))] gap-0 items-stretch">
           {renderTriangleRow(bottomLeft, false)}
           <BarColumn
-            bars={bars}
-            myRole={myRole}
+            shownRole="HOST"
+            count={bars.HOST}
             isTop={false}
-            selected={selectedPoint === "BAR"}
-            onClick={() => myRole && bars[myRole] > 0 && onPointClick("BAR")}
+            canSelect={canSelectBar("HOST")}
+            selected={selectedPoint === "BAR" && myRole === "HOST"}
+            onClick={() => canSelectBar("HOST") && onPointClick("BAR")}
           />
           {renderTriangleRow(bottomRight, false)}
         </div>
 
         {/* HOST bearing-off indicator */}
         <div className="flex justify-start text-[9px] sm:text-[10px] font-mono text-red-400/70 crt-glow px-1 mt-1 uppercase tracking-widest">
-          <span>Orbital Evac (HOST) {borneOff.HOST}/15</span>
+          <span
+            data-testid="orbital-evac-host"
+            data-count={borneOff.HOST}
+            data-targetable={String(hostCanBearOff)}
+            onClick={hostCanBearOff ? () => onTargetClick(-1) : undefined}
+            className={`${hostCanBearOff ? "cursor-pointer ring-2 ring-green-400 rounded px-1" : ""}`}
+          >
+            Orbital Evac (HOST) {borneOff.HOST}/15
+          </span>
         </div>
       </div>
     </div>
@@ -121,48 +168,48 @@ export default function TacticalBoard({
 // ---------------------------------------------------------
 
 function BarColumn({
-  bars,
-  myRole,
+  shownRole,
+  count,
   isTop,
+  canSelect,
   selected,
   onClick,
 }: {
-  bars: { HOST: number; GUEST: number };
-  myRole: PlayerRole | undefined;
+  shownRole: PlayerRole;
+  count: number;
   isTop: boolean;
+  canSelect: boolean;
   selected: boolean;
   onClick: () => void;
 }) {
-  const count = myRole ? bars[myRole] : 0;
-  const hasPieces = count > 0;
-  const isHost = myRole === "HOST";
-
-  // Show opponent's bar count on top; player's bar count on bottom
-  const showOwnHere = (isTop && !isHost) || (!isTop && isHost);
-  const displayCount = showOwnHere ? count : (myRole ? bars[isHost ? "GUEST" : "HOST"] : 0);
-  const displayIsMine = showOwnHere && hasPieces;
+  const isHost = shownRole === "HOST";
+  const testId = isHost ? "void-buffer-host" : "void-buffer-guest";
 
   return (
     <div
-      onClick={displayIsMine ? onClick : undefined}
+      onClick={canSelect ? onClick : undefined}
+      data-testid={testId}
+      data-owner={shownRole}
+      data-count={count}
+      data-selectable={String(canSelect)}
       className={`
         flex flex-col items-center justify-center
         min-w-[20px] sm:min-w-[28px] px-1
         border-x border-amber-900/50
-        ${displayIsMine ? "cursor-pointer" : ""}
-        ${selected && displayIsMine ? "crt-pulse rounded" : ""}
+        ${canSelect ? "cursor-pointer" : ""}
+        ${selected ? "crt-pulse rounded" : ""}
       `}
       title="Void-Buffer (Bar)"
     >
-      {displayCount > 0 && (
+      {count > 0 && (
         <div
           className={`
             w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center
             text-[9px] sm:text-[10px] font-bold
-            ${(showOwnHere ? isHost : !isHost) ? "legion-host text-red-100" : "legion-guest text-amber-950"}
+            ${isHost ? "legion-host text-red-100" : "legion-guest text-amber-950"}
           `}
         >
-          {displayCount}
+          {count}
         </div>
       )}
       <div className="text-[7px] sm:text-[8px] font-mono text-amber-600/60 tracking-widest uppercase mt-1">
@@ -224,6 +271,15 @@ function TriangularPoint({
   return (
     <div
       onClick={clickable ? handleClick : undefined}
+      data-testid={`trench-${index}`}
+      data-index={index}
+      data-owner={point.owner ?? ""}
+      data-count={point.count}
+      data-selectable={String(canSelect)}
+      data-targetable={String(isValidTarget)}
+      data-item-targetable={String(isItemTarget)}
+      data-selected={String(isSelected)}
+      data-protected={String(!!(point.activeEffects && point.activeEffects.length > 0))}
       className={`
         relative flex flex-col items-center min-h-[80px] sm:min-h-[120px] md:min-h-[150px]
         ${isTop ? "justify-start" : "justify-end"}

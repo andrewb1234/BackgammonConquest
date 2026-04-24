@@ -106,7 +106,21 @@ export default function BattleActiveView() {
   const isSabotaged = battle.disabledModifierNodeId === battle.contestedNodeId;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
+    <div
+      className="flex flex-col items-center gap-4 w-full max-w-4xl"
+      data-testid="battle-active"
+      data-my-role={myRole ?? ""}
+      data-active-role={
+        gameState?.players.find((p) => p.playerId === battle.activePlayerId)?.role ?? ""
+      }
+      data-phase={gameState?.phase ?? ""}
+      data-state-version={gameState?.stateVersion ?? 0}
+      data-turn-count={battle.turnCount}
+      data-dice={dice ? dice.join(",") : ""}
+      data-dice-used={dice ? diceUsed.map((u) => (u ? "1" : "0")).join(",") : ""}
+      data-escalation-status={battle.escalation.status}
+      data-escalation-multiplier={battle.escalation.multiplier}
+    >
       {/* Header */}
       <div className="flex flex-col items-center gap-1 w-full px-4">
         <div className="flex items-center justify-between w-full">
@@ -161,6 +175,7 @@ export default function BattleActiveView() {
           isMyTurn && (
             <button
               onClick={handleRoll}
+              data-testid="btn-roll-dice"
               className="px-6 py-2 bg-amber-600 hover:bg-amber-500 rounded font-bold transition"
             >
               Roll Dice
@@ -190,12 +205,15 @@ export default function BattleActiveView() {
           </span>
           <button
             onClick={handleSubmitMoves}
+            data-testid="btn-submit-moves"
+            data-pending-count={pendingMoves.length}
             className="px-4 py-1 bg-green-700 hover:bg-green-600 rounded font-bold text-sm transition"
           >
             Submit
           </button>
           <button
             onClick={handleClearMoves}
+            data-testid="btn-clear-moves"
             className="px-4 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition"
           >
             Clear
@@ -270,6 +288,7 @@ export default function BattleActiveView() {
 
         <button
           onClick={() => sendGameIntent("INTENT_FORFEIT", {})}
+          data-testid="btn-forfeit"
           className="px-3 py-1 bg-red-900/40 hover:bg-red-900/60 text-red-400 rounded text-xs transition"
         >
           Forfeit

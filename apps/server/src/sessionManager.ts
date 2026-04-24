@@ -192,3 +192,96 @@ export function _resetForTesting(): void {
   sectorCodeIndex.clear();
   playerSessionIndex.clear();
 }
+
+// ---------------------------------------------------------
+// TEST HOOK: DIRECT STATE INJECTION
+// ---------------------------------------------------------
+
+export interface SeedSessionOptions {
+  hostClientId?: string;
+  guestClientId?: string;
+  /** Partial GameState that is deep-merged over a sensible two-player default. */
+  state?: DeepPartial<GameState>;
+}
+
+export interface SeedSessionResult {
+  sessionId: string;
+  sectorCode: string;
+  hostClientId: string;
+  guestClientId: string;
+  gameState: GameState;
+}
+
+type DeepPartial<T> = T extends (infer U)[]
+  ? DeepPartial<U>[]
+  : T extends object
+    ? { [K in keyof T]?: DeepPartial<T[K]> }
+    : T;
+
+function deepMerge<T>(base: T, patch: DeepPartial<T> | undefined): T {
+  if (patch === undefined || patch === null) return base;
+  if (Array.isArray(patch)) {
+    // Arrays are replaced wholesale — callers must supply the full array.
+    return patch as unknown as T;
+  }
+  if (typeof patch !== "object") return patch as unknown as T;
+
+  const out: any = Array.isArray(base) ? [...(base as any)] : { ...(base as any) };
+  for (const key of Object.keys(patch as object)) {
+    const baseVal = (base as any)?.[key];
+    const patchVal = (patch as any)[key];
+    if (
+      baseVal &&
+      typeof baseVal === "object" &&
+      !Array.isArray(baseVal) &&
+      patchVal &&
+      typeof patchVal === "object" &&
+      !Array.isArray(patchVal)
+    ) {
+      out[key] = deepMerge(baseVal, patchVal);
+    } else {
+      out[key] = patchVal;
+    }
+  }
+  return out as T;
+}
+
+/**
+ * Create a session with both players pre-joined & connected, seeded with
+ * the caller-supplied partial state. Intended for Playwright state injection
+ * via the /__test__/seed endpoint only.
+ */
+export function seedSession(opts: SeedSessionOptions = {}): SeedSessionResult {
+  const sessionId = crypto.randomUUID();
+  const sectorCode = generateUniqueSectorCode();
+  const hostClientId = opts.hostClientId ?? `test-host-${sessionId.slice(0, 8)}`;
+  const guestClientId = opts.guestClientId ?? `test-guest-${sessionId.slice(0, 8)}`;
+
+  const base: GameState = {
+    sessionId,
+    stateVersion: 0,
+    phase: "LOBBY",
+    players: [
+      { ...createPlayer("HOST", hostClientId), connected: true },
+      { ...createPlayer("GUEST", guestClientId), connected: true },
+    ],
+    campaign: createInitialCampaign(hostClientId),
+  };
+
+  const merged = deepMerge(base, opts.state);
+  // Force the immutable identity fields regardless of what the patch supplied.
+  // If the patch replaced `players` with fewer than 2 entries, fill from base.
+  merged.sessionId = sessionId;
+  if (!Array.isArray(merged.players) || merged.players.length < 2) {
+    merged.players = base.players;
+  }
+  merged.players[0] = { ...merged.players[0], playerId: hostClientId, role: "HOST" };
+  merged.players[1] = { ...merged.players[1], playerId: guestClientId, role: "GUEST" };
+
+  sessions.set(sessionId, merged);
+  sectorCodeIndex.set(sectorCode, sessionId);
+  playerSessionIndex.set(hostClientId, sessionId);
+  playerSessionIndex.set(guestClientId, sessionId);
+
+  return { sessionId, sectorCode, hostClientId, guestClientId, gameState: merged };
+}

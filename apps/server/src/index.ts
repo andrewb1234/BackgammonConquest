@@ -14,12 +14,14 @@ import {
   broadcastPeerDisconnected,
 } from "./broadcast.js";
 import { applyForfeit } from "./handlers/resolution.js";
+import { registerTestHooks } from "./testHooks.js";
 
 dotenv.config({ path: "../../.env" });
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 const RECONNECT_GRACE_PERIOD_MS = 45_000;
+const TEST_HOOKS_ENABLED = process.env.ENABLE_TEST_HOOKS === "1";
 
 const app = express();
 const server = http.createServer(app);
@@ -27,9 +29,25 @@ const io = new SocketServer(server, {
   cors: { origin: CLIENT_URL, methods: ["GET", "POST"] },
 });
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+// Minimal CORS for HTTP endpoints (used by the Playwright test hooks).
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", CLIENT_URL);
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+  next();
 });
+
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", testHooks: TEST_HOOKS_ENABLED });
+});
+
+if (TEST_HOOKS_ENABLED) {
+  registerTestHooks(app);
+}
 
 // ---------------------------------------------------------
 // SOCKET CONNECTION LIFECYCLE
