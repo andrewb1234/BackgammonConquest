@@ -72,6 +72,7 @@ export default function TacticalBoard({
           isSelected={isSelected}
           isValidTarget={isValid}
           isItemTarget={itemTarget}
+          targetingItem={targetingItem}
           canSelect={canSelect}
           onClick={() => onPointClick(idx)}
           onTargetClick={() => onTargetClick(idx)}
@@ -329,6 +330,7 @@ function TriangularPoint({
   isSelected,
   isValidTarget,
   isItemTarget,
+  targetingItem,
   canSelect,
   onClick,
   onTargetClick,
@@ -340,6 +342,7 @@ function TriangularPoint({
   isSelected: boolean;
   isValidTarget: boolean;
   isItemTarget: boolean;
+  targetingItem: string | null;
   canSelect: boolean;
   onClick: () => void;
   onTargetClick: () => void;
@@ -376,16 +379,12 @@ function TriangularPoint({
 
   const clickable = canSelect || isValidTarget || isItemTarget;
 
-  // Item-target outline color depends on the ambient targetingItem — we don't
-  // have that prop here, but the ring color convention is:
+  // Item-target outline color depends on the ambient targetingItem:
   //   - AIR_STRIKE  → red (hostile strike) → .item-target-strike
   //   - ANGELIC_PROTECTION → blue (friendly) → .item-target-protect
-  // We inspect the point's owner as a proxy: targeting your own pieces =
-  // protect, targeting opponent = strike. Not 100% accurate across all items
-  // but visually correct for the two items currently in the game.
   const itemOutlineClass = isItemTarget
-    ? point.owner && point.owner === "HOST"
-      ? "item-target-protect" // friendly-only view TODO: pipe real targetingItem in
+    ? targetingItem === "ANGELIC_PROTECTION"
+      ? "item-target-protect"
       : "item-target-strike"
     : "";
 
